@@ -247,5 +247,3 @@ For å sette opp prosjektet lokalt, følg desse stega:
    ```sh
    vercel --prod
    ```
-
----
