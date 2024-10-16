@@ -86,17 +86,55 @@ matmix/
 
 ---
 
-## Flytdiagram for Brukaroppleving
+## Flytdiagram for Brukarforteljingar
 
+### 1. Småbarnsfamilien
 
+```mermaid
+graph TD
+    A[Start Økt] -->|Brukarnamn + Øktkode| B[Opprett Økt]
+    B --> C[Barna Legg til Ingrediensar]
+    C -->|Poteter, Gulrot, Laks, Dill| D[AI Genererer Oppskrift]
+    D --> E[Vis Familievennleg Oppskrift]
+    E --> F[Alle Lagar Mat Sammen]
+```
 
-1. **Start Økt**: Opprett ei ny økt eller bli med i ei eksisterande.
-2. **Legg til Ingrediensar**: Brukarar legg til ingrediensar dei har tilgjengeleg.
-3. **Vel Ingrediensar**: Vel kva ingrediensar som skal brukast. Inkluder avstemming.
-4. **AI Genererer Oppskrift**: Send ingrediensane til AI-en for å generere ei oppskrift.
-5. **Vis og Del Oppskrift**: Oppskrifta kan lastast ned eller delast.
+**Beskrivelse**: Kari og familien brukar MatMix til å lage middag saman. Barna legg til ingrediensar dei finn på kjøkenet, og AI-en lagar ei enkel oppskrift som alle kan vere med på å lage.
 
-> Vurder å inkludere eit *ja*
+---
+
+### 2. Kollektivet
+
+```mermaid
+graph TD
+    A[Start Økt] -->|Brukarnamn + Øktkode| B[Bli med i Eksisterande Økt]
+    B --> C[Alle Legg til Ingrediensar]
+    C -->|Pasta, Tomatar, Kvitløk, Ost| D[Avstemming]
+    D -->|Alle Enige| E[AI Genererer Oppskrift]
+    E --> F[Vis Pastarett Oppskrift]
+    F --> G[Alle Delar Pastaretten]
+```
+
+**Beskrivelse**: Med få ingrediensar igjen bestemmer kollektivet seg for å lage noko saman. Etter avstemming vel dei alle ingrediensane, og MatMix lagar ei oppskrift på ein enkel pastarett.
+
+---
+
+### 3. Matsvinn-entusiasten
+
+```mermaid
+graph TD
+    A[Start Økt] -->|Brukarnamn + Øktkode| B[Inviter Vener til Økt]
+    B --> C[Alle Legg til Restar]
+    C -->|Ris, Kyllingrestar, Løk, Krydder| D[AI Genererer Oppskrift]
+    D --> E[Vis Wok Oppskrift]
+    E --> F[Lag Wok og Reduser Matsvinn]
+```
+
+**Beskrivelse**: Ola inviterer vener til ei økt for å redusere matsvinn. Dei legg til restane dei har, og MatMix gir dei ei oppskrift på ein smakfull wok som nyttar alle ingrediensane utan at noko går til spille.
+
+---
+
+## Teknisk Funksjonalitet
 
 | Funksjonalitet                     | Teknologi                | Beskriving                                                                        |
 | ---------------------------------- | ------------------------ | --------------------------------------------------------------------------------- |
@@ -126,16 +164,6 @@ matmix/
 |                | Skildring               | Kort skildring av retten.                                            |
 |                | Ingrediensliste         | Liste over ingrediensane som blir brukt i oppskrifta.                |
 |                | Framgangsmåte           | Steg-for-steg instruksjonar for korleis ein lagar retten.            |
-
----
-
-## Brukarforteljingar
-
-1. **Småbarnsfamilien**: Kari og familien hennar vil lage middag saman. Barna legg til ingrediensar dei finn på kjøkenet - poteter, gulrot, laks og dill. Dei vel desse ingrediensane, og AI-en lagar ei enkel, familievennleg oppskrift med laksebåtar og potetmos som alle kan vere med på å lage.
-
-2. **Kollektivet**: I eit kollektiv har dei lite matvarer att, men bestemmer seg for å lage noko av det dei har. Dei legg til pasta, tomatar, kvitløk og ost. Etter avstemming vel dei å bruke alle ingrediensane, og MatMix genererer ei oppskrift på ein enkel pastarett som alle kan dele.
-
-3. **Matsvinn-entusiasten**: Ola vil redusere matsvinn og inviterer vener til ei økt der dei legg til restar. Dei legg til ris, kyllingrestar, løk og krydder. MatMix gir dei ei oppskrift på ein smakfull wok som brukar alle ingrediensane utan at noko går til spille.
 
 ---
 
