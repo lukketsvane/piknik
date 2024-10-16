@@ -1,5 +1,5 @@
 import React from 'react'
-import Matmix from '@/components/matmix'
+import Miknik from '@/components/piknik'
 
 export default function Home() {
   return (
@@ -10,7 +10,7 @@ export default function Home() {
             <div className="w-16 h-4 bg-gray-300 rounded-full"></div>
           </div>
           <div className="p-4">
-            <Matmix />
+            <Miknik />
           </div>
           <div className="h-6 bg-gray-200 rounded-b-[40px] flex items-center justify-center">
             <div className="w-32 h-4 bg-gray-300 rounded-full"></div>

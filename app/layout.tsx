@@ -7,14 +7,14 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: {
-    default: 'MatMix | Kreativ matlagingsapp',
-    template: '%s | MatMix'
+    default: 'PikNik | Kreativ matlagingsapp',
+    template: '%s | PikNik'
   },
-  description: 'MatMix er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.',
+  description: 'PikNik er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.',
   keywords: ['matlaging', 'oppskrifter', 'samarbeid', 'kreativ matlaging', 'matlagingsapp'],
-  authors: [{ name: 'MatMix Team' }],
-  creator: 'MatMix Team',
-  publisher: 'MatMix',
+  authors: [{ name: 'PikNik Team' }],
+  creator: 'PikNik Team',
+  publisher: 'PikNik',
   formatDetection: {
     email: false,
     address: false,
@@ -23,16 +23,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'nb_NO',
-    url: 'https://matmix.no',
-    title: 'MatMix | Kreativ matlagingsapp',
-    description: 'Samarbeid om kreative oppskrifter i sanntid med MatMix',
-    siteName: 'MatMix',
+    url: 'https://piknik.no',
+    title: 'PikNik | Kreativ matlagingsapp',
+    description: 'Samarbeid om kreative oppskrifter i sanntid med PikNik',
+    siteName: 'PikNik',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MatMix | Kreativ matlagingsapp',
-    description: 'Samarbeid om kreative oppskrifter i sanntid med MatMix',
-    creator: '@MatMixApp',
+    title: 'PikNik | Kreativ matlagingsapp',
+    description: 'Samarbeid om kreative oppskrifter i sanntid med PikNik',
+    creator: '@PikNikApp',
   },
   robots: {
     index: true,

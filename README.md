@@ -1,23 +1,23 @@
 ---
 
-# MatMix: Interaktivt Samarbeid om Matlaging
+# PikNik: Interaktivt Samarbeid om Matlaging
 
-[GitHub Repository](https://github.com/lukketsvane/matmix)
+[GitHub Repository](https://github.com/lukketsvane/piknik)
 
 ---
 
 ## Oversikt
 
-MatMix er ei plattform der brukarar kan skape kreative måltid i fellesskap, gjennom å samarbeide om ingrediensane dei har tilgjengeleg. Gjennom sanntidsinteraksjon og AI-assistert oppskriftsgenerering, tilbyr MatMix ei sosial og innovativ tilnærming til matlaging.
+PikNik er ei plattform der brukarar kan skape kreative måltid i fellesskap, gjennom å samarbeide om ingrediensane dei har tilgjengeleg. Gjennom sanntidsinteraksjon og AI-assistert oppskriftsgenerering, tilbyr PikNik ei sosial og innovativ tilnærming til matlaging.
 
-MatMix er ei interaktiv matlagingsapp der brukarar kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensane dei har. Dette dokumentet gir oversikt over funksjonane, teknisk arkitektur, datamodell og brukarforteljingar som viser korleis applikasjonen kan brukast.
+PikNik er ei interaktiv matlagingsapp der brukarar kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensane dei har. Dette dokumentet gir oversikt over funksjonane, teknisk arkitektur, datamodell og brukarforteljingar som viser korleis applikasjonen kan brukast.
 
 ---
 
 ## Filstruktur
 
 ```
-matmix/
+piknik/
   ├─ app/
   │  ├─ [code]/
   │  │  └─ page.tsx
@@ -44,7 +44,7 @@ matmix/
   │  │  ├─ toaster.tsx
   │  │  ├─ tooltip.tsx
   │  │  └─ use-toast.ts
-  │  └─ matmix.tsx
+  │  └─ piknik.tsx
   ├─ hooks/
   │  └─ use-toast.ts
   ├─ lib/
@@ -99,7 +99,7 @@ graph TD
     E --> F[Alle Lagar Mat Sammen]
 ```
 
-**Beskrivelse**: Kari og familien brukar MatMix til å lage middag saman. Barna legg til ingrediensar dei finn på kjøkenet, og AI-en lagar ei enkel oppskrift som alle kan vere med på å lage.
+**Beskrivelse**: Kari og familien brukar PikNik til å lage middag saman. Barna legg til ingrediensar dei finn på kjøkenet, og AI-en lagar ei enkel oppskrift som alle kan vere med på å lage.
 
 ---
 
@@ -115,7 +115,7 @@ graph TD
     F --> G[Alle Delar Pastaretten]
 ```
 
-**Beskrivelse**: Med få ingrediensar igjen bestemmer kollektivet seg for å lage noko saman. Etter avstemming vel dei alle ingrediensane, og MatMix lagar ei oppskrift på ein enkel pastarett.
+**Beskrivelse**: Med få ingrediensar igjen bestemmer kollektivet seg for å lage noko saman. Etter avstemming vel dei alle ingrediensane, og PikNik lagar ei oppskrift på ein enkel pastarett.
 
 ---
 
@@ -130,7 +130,7 @@ graph TD
     E --> F[Lag Wok og Reduser Matsvinn]
 ```
 
-**Beskrivelse**: Ola inviterer vener til ei økt for å redusere matsvinn. Dei legg til restane dei har, og MatMix gir dei ei oppskrift på ein smakfull wok som nyttar alle ingrediensane utan at noko går til spille.
+**Beskrivelse**: Ola inviterer vener til ei økt for å redusere matsvinn. Dei legg til restane dei har, og PikNik gir dei ei oppskrift på ein smakfull wok som nyttar alle ingrediensane utan at noko går til spille.
 
 ---
 
@@ -186,6 +186,6 @@ graph TD
 
 ---
 
-For meir informasjon og bidrag, sjå vårt [GitHub Repository](https://github.com/lukketsvane/matmix).
+For meir informasjon og bidrag, sjå vårt [GitHub Repository](https://github.com/lukketsvane/piknik).
 
 ---

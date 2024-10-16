@@ -98,8 +98,8 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
   return (
     <Card className="w-full max-w-md mx-auto mt-20 bg-white relative">
       <CardHeader className="flex flex-col items-center">
-        <Image src="/logo.png" alt="MatMix Logo" width={200} height={200} />
-        <CardTitle className="text-2xl font-bold text-center text-purple-600 mt-4">Velkomen til MatMix!</CardTitle>
+        <Image src="/logo.png" alt="PikNik Logo" width={200} height={200} />
+        <CardTitle className="text-2xl font-bold text-center text-purple-600 mt-4">Velkomen til PikNik!</CardTitle>
         <p className="text-center mt-2">
           <span className="underline decoration-purple-500">Bland</span> ingredienser, 
           <span className="underline decoration-green-500">skap</span> oppskrifter, 
@@ -160,7 +160,7 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
   )
 }
 
-export default function MatMix({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
+export default function PikNik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
   const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>([])
   const [valgteIngrediensar, setValgteIngrediensar] = useState<Ingrediens[]>([])
@@ -180,7 +180,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null)
   const generatingAudioRef = useRef<HTMLAudioElement | null>(null)
   const { toPDF, targetRef } = usePDF({
-    filename: 'matmix-oppskrift.pdf',
+    filename: 'piknik-oppskrift.pdf',
     page: { 
       margin: 20,
       format: 'A4',
@@ -439,7 +439,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
                 <Users className="w-4 h-4 mr-2" />
                 Del økt
               </Button>
-              <h1 className="text-3xl font-bold text-purple-600">MatMix!</h1>
+              <h1 className="text-3xl font-bold text-purple-600">PikNik!</h1>
             </div>
             <div className="flex space-x-2">
               {participants.map((participant, index) => (
@@ -698,11 +698,11 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
       <Dialog open={showInfo} onOpenChange={setShowInfo}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Om MatMix</DialogTitle>
+            <DialogTitle>Om PikNik</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>MatMix er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.</p>
-            <h3 className="font-semibold mt-4 mb-2">Slik bruker du MatMix:</h3>
+            <p>PikNik er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.</p>
+            <h3 className="font-semibold mt-4 mb-2">Slik bruker du PikNik:</h3>
             <ol className="list-decimal list-inside">
               <li>Legg til ingredienser du har tilgjengelig</li>
               <li>Velg ingrediensene du vil bruke i oppskriften</li>

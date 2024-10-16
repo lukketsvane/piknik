@@ -1,4 +1,4 @@
-c:/Users/Shadow/Documents/GitHub/matmix/
+c:/Users/Shadow/Documents/GitHub/piknik/
   ├─].next/ (ignored)
   ├─].vercel/ (ignored)
   ├─ app/
@@ -22,7 +22,7 @@ c:/Users/Shadow/Documents/GitHub/matmix/
   │  │  ├─ switch.tsx
   │  │  ├─ table.tsx
   │  │  └─ tooltip.tsx
-  │  └─ matmix.tsx
+  │  └─ piknik.tsx
   ├─ lib/
   │  └─ utils.ts
   ├─]node_modules/ (ignored)

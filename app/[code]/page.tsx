@@ -1,5 +1,5 @@
-import MatMix from '@/components/matmix'
+import PikNik from '@/components/piknik'
 
 export default function SessionPage({ params }: { params: { code: string } }) {
-  return <MatMix sessionCode={params.code} />
+  return <PikNik sessionCode={params.code} />
 }
