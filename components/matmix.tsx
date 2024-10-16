@@ -427,7 +427,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
   }
 
   return (
-    <div className="w-full min-h-[calc(100vh-8rem)] bg-gray-100 flex flex-col items-center justify-center py-4 md:pt-12">
+    <div className="w-full min-h-[calc(100vh-8rem)] bg-white flex flex-col items-center justify-center py-4 md:pt-12">
       <div className="w-full max-w-md mx-auto bg-white rounded-[40px] shadow-lg overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 10rem)' }}>
         <div className="h-6 bg-gray-200 rounded-t-[40px] flex items-center justify-center">
           <div className="w-16 h-4 bg-gray-300 rounded-full"></div>
@@ -435,7 +435,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
         <div className="px-4 py-6 flex-grow overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-4">
-              <Button variant="outline" onClick={() => setShowSessionCode(true)} className="bg-white hover:bg-gray-100">
+              <Button variant="outline" onClick={() => setShowSessionCode(true)} className="bg-white hover:bg-white">
                 <Users className="w-4 h-4 mr-2" />
                 Del økt
               </Button>
@@ -515,7 +515,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
             </div>
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-100">
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white">
             <div className="w-full max-w-md mx-auto">
               <Button 
                 onClick={handterBlanding} 
