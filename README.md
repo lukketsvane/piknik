@@ -91,7 +91,7 @@ matmix/
 ### 1. Småbarnsfamilien
 
 ```mermaid
-flowchart LR
+graph TD
     step1[Steg 1: Start Økt] --> step2[Steg 2: Opprett Økt med Brukarnamn og Øktkode]
     step2 --> step3[Steg 3: Barna Legg til Ingrediensar (Poteter, Gulrot, Laks, Dill)]
     step3 --> step4[Steg 4: AI Genererer Oppskrift]
@@ -106,7 +106,7 @@ flowchart LR
 ### 2. Kollektivet
 
 ```mermaid
-flowchart LR
+graph TD
     step1[Steg 1: Start Økt] --> step2[Steg 2: Bli med i Eksisterande Økt med Brukarnamn og Øktkode]
     step2 --> step3[Steg 3: Alle Legg til Ingrediensar (Pasta, Tomatar, Kvitløk, Ost)]
     step3 --> step4[Steg 4: Avstemming]
@@ -122,7 +122,7 @@ flowchart LR
 ### 3. Matsvinn-entusiasten
 
 ```mermaid
-flowchart LR
+graph TD
     step1[Steg 1: Start Økt] --> step2[Steg 2: Inviter Vener til Økt med Brukarnamn og Øktkode]
     step2 --> step3[Steg 3: Alle Legg til Restar (Ris, Kyllingrestar, Løk, Krydder)]
     step3 --> step4[Steg 4: AI Genererer Oppskrift]
@@ -131,22 +131,6 @@ flowchart LR
 ```
 
 **Beskrivelse**: 🌱 Ola inviterer vener til ei økt for å redusere matsvinn. ♻️ Dei legg til restane dei har, og MatMix gir dei ei oppskrift på ein smakfull wok som nyttar alle ingrediensane utan at noko går til spille.
-
----
-
-### WebSocket Handling Flow
-
-```mermaid
-flowchart LR
-    step1[Steg 1: Klient Initierer Økt] --> step2[Steg 2: Opprett WebSocket Forbindelse]
-    step2 --> step3[Steg 3: Server Bekreftar Økt]
-    step3 --> step4[Steg 4: Oppdater Ingrediensar i Sanntid]
-    step4 --> step5[Steg 5: Broadcast Endringar til Alle Klientar]
-    step5 --> step6[Steg 6: Generer Oppskrift ved AI-Forespørsel]
-    step6 --> step7[Steg 7: Send Generert Oppskrift til Alle Klientar]
-```
-
-**Beskrivelse**: Dette diagrammet viser korleis sanntidskommunikasjon mellom klientar og server vert handtert ved hjelp av WebSockets. Serveren oppdaterar alle klientar i sanntid når ingrediensar vert lagt til eller redigert.
 
 ---
 
@@ -189,7 +173,7 @@ flowchart LR
 - **Lagre Favorittoppskrifter**: Moglegheit for å lagre oppskrifter for framtidig bruk.
 - **Utvida Kategorisering og Filtrering**: Filtrer ingrediensar etter kategori, tilgjengelegheit, eller preferansar som vegetar eller vegansk.
 
-> Vurder å inkludere spesifikke teknologiar, metodar og implementasjonsstrategiar for kvart av dei vidare utviklingspunkta.
+> Vurder å inkludere spesifikke teknologiar/metodar for vidare utviklingspunkt.
 
 ---
 
@@ -202,48 +186,6 @@ flowchart LR
 
 ---
 
-## Oppsett
+For meir informasjon og bidrag, sjå vårt [GitHub Repository](https://github.com/lukketsvane/matmix).
 
-For å sette opp prosjektet lokalt, følg desse stega:
-
-1. Klon repositoriet:
-
-   ```sh
-   git clone https://github.com/lukketsvane/matmix.git
-   ```
-
-2. Gå inn i prosjektmappa:
-
-   ```sh
-   cd matmix
-   ```
-
-3. Installer avhengigheiter:
-
-   ```sh
-   npm install
-   ```
-
-4. Start utviklingsserveren:
-
-   ```sh
-   npm run dev
-   ```
-
-5. Konfigurer Supabase for sanntidskommunikasjon:
-
-   - Opprett eit prosjekt i [Supabase](https://supabase.io/).
-   - Kopier API-nøklane og sett dei inn i `.env`-fila.
-
-6. Konfigurer `.env.local` for Anthropic API:
-
-   - Gå til [Anthropic Console](https://console.anthropic.com) for å opprette API-nøklar.
-   - Legg API-nøklane til i `.env.local`-fila.
-
-7. Utplassering til Vercel:
-
-   - For å setje opp prosjektet med Vercel for produksjon, køyr følgande kommando:
-
-   ```sh
-   vercel --prod
-   ```
+---
