@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Anthropic from '@anthropic-ai/sdk'
 import { usePDF } from 'react-to-pdf'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const client = new Anthropic({
   apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
@@ -96,8 +97,14 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
 
   return (
     <Card className="w-full max-w-md mx-auto mt-20 bg-white">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center text-purple-600">Velkomen til MatMix!</CardTitle>
+      <CardHeader className="flex flex-col items-center">
+        <Image src="/logo.png" alt="MatMix Logo" width={200} height={200} />
+        <CardTitle className="text-2xl font-bold text-center text-purple-600 mt-4">Velkomen til MatMix!</CardTitle>
+        <p className="text-center mt-2">
+          <span className="underline decoration-purple-500">Bland</span> ingredienser, 
+          <span className="underline decoration-green-500">skap</span> oppskrifter, 
+          <span className="underline decoration-blue-500">del</span> med venner!
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -177,11 +184,11 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
     page: { 
       margin: 20,
       format: 'A4',
-      orientation: 'portrait'
+      orientation: 'landscape'
     },
     view: {
-      width: 595, // A4 width in points
-      height: 842 // A4 height in points
+      width: 1190, // A4 landscape width in points (doubled from 595)
+      height: 842 // A4 height in points (unchanged)
     }
   })
 
@@ -419,12 +426,12 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-100 flex flex-col items-center justify-center py-8">
-      <div className="w-full max-w-md mx-auto bg-white rounded-[40px] shadow-lg overflow-hidden min-h-[80vh] flex flex-col">
+    <div className="w-full min-h-[calc(100vh-8rem)] bg-gray-100 flex flex-col items-center justify-center py-4 md:pt-12">
+      <div className="w-full max-w-md mx-auto bg-white rounded-[40px] shadow-lg overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 10rem)' }}>
         <div className="h-6 bg-gray-200 rounded-t-[40px] flex items-center justify-center">
           <div className="w-16 h-4 bg-gray-300 rounded-full"></div>
         </div>
-        <div className="px-4 py-8 flex-grow overflow-y-auto">
+        <div className="px-4 py-6 flex-grow overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => setShowSessionCode(true)} className="bg-white hover:bg-gray-100">
@@ -507,7 +514,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
             </div>
           </div>
 
-          <div className="absolute bottom-4 left-4 z-10 flex space-x-2">
+          <div className="fixed bottom-20 left-4 z-10 flex space-x-2">
             <Button variant="outline" size="icon" onClick={toggleMute}>
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
@@ -515,14 +522,16 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
               <Info className="h-4 w-4" />
             </Button>
           </div>
-          <div className="p-4 bg-gray-200">
-            <Button 
-              onClick={handterBlanding} 
-              disabled={valgteIngrediensar.length < 2 || blandar}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-            >
-              {blandar ? "Blandar..." : "Bland!"}
-            </Button>
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-100">
+            <div className="w-full max-w-md mx-auto">
+              <Button 
+                onClick={handterBlanding} 
+                disabled={valgteIngrediensar.length < 2 || blandar}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+              >
+                {blandar ? "Blandar..." : "Bland!"}
+              </Button>
+            </div>
           </div>
         </div>
         <div className="h-6 bg-gray-200 rounded-b-[40px] flex items-center justify-center">
@@ -616,7 +625,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
             </div>
           </div>
           <Button onClick={redigeringIngrediens ? handterOppdaterIngrediens : handterLeggTilIngrediens} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
-            {redigeringIngrediens ? 'Oppgrader ingrediens' : 'Legg til ingrediens'}
+            {redigeringIngrediens ? 'Oppdater ingrediens' : 'Legg til ingrediens'}
           </Button>
         </DialogContent>
       </Dialog>
@@ -638,7 +647,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
               </div>
             </CardHeader>
             <ScrollArea className="flex-grow">
-              <CardContent ref={targetRef} className="p-6">
+              <CardContent ref={targetRef} className="p-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-bold mb-4">{oppskrift.tittel}</h2>
                 <p className="mb-6">{oppskrift.skildring}</p>
                 
@@ -681,19 +690,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
             <p className="text-center text-2xl font-bold">{sessionCode}</p>
             <p className="text-center mt-2">Del denne koden med andre for å bli med i økta di.</p>
           </div>
-        </DialogContent>
-      </Dialog>
-
-
-      <Dialog open={showSessionCode} onOpenChange={setShowSessionCode}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Del økt</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-center text-2xl font-bold">{sessionCode}</p>
-            <p className="text-center mt-2">Del denne koden med andre for å bli med i økta di.</p>
-          </div>
+      
         </DialogContent>
       </Dialog>
 
