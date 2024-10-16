@@ -41,11 +41,23 @@ type Oppskrift = {
   steg: string[]
 }
 
-const standardIngredienser: Ingrediens[] = [
+const alleIngredienser: Ingrediens[] = [
   { namn: "Laks", mengde: 500, eining: "g", kategori: "Fisk", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
   { namn: "Potet", mengde: 4, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
   { namn: "Dill", mengde: 1, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Kylling", mengde: 400, eining: "g", kategori: "Kjøt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Ris", mengde: 2, eining: "dl", kategori: "Bakevarer", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Gulrot", mengde: 2, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Løk", mengde: 1, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Egg", mengde: 4, eining: "stk", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Melk", mengde: 5, eining: "dl", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Eple", mengde: 3, eining: "stk", kategori: "Frukt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
 ]
+
+const getRandomIngredients = (count: number): Ingrediens[] => {
+  const shuffled = [...alleIngredienser].sort(() => 0.5 - Math.random())
+  return shuffled.slice(0, count)
+}
 
 const kategoriar: Kategori[] = ['Frukt', 'Grønsaker', 'Meieri', 'Fisk', 'Bakevarer', 'Kjøt', 'Anna']
 const einingar: Eining[] = ['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts']
@@ -141,7 +153,7 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
 
 export default function MatMix({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
-  const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>(standardIngredienser)
+  const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>([])
   const [valgteIngrediensar, setValgteIngrediensar] = useState<Ingrediens[]>([])
   const [nyIngrediens, setNyIngrediens] = useState<Ingrediens>({ namn: "", mengde: 0, eining: "stk", kategori: "Anna", bilde: "/placeholder.svg?height=40&width=40", brukar: null })
   const [blandar, setBlandar] = useState(false)
@@ -165,6 +177,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
       const newUser = { namn: username, farge: userColors[0] }
       setCurrentUser(newUser)
       setParticipants([newUser])
+      setIngrediensar(getRandomIngredients(3))
     }
   }, [initialSessionCode])
 
@@ -235,6 +248,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
     setCurrentUser(newUser)
     setParticipants([newUser])
     setSessionStarted(true)
+    setIngrediensar(getRandomIngredients(3))
     router.push(`/${code}`)
   }
 
@@ -267,7 +281,8 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
   }
 
   const handterSlettIngrediens = (ingrediens: Ingrediens) => {
-    setIngrediensar(prev => prev.filter(i => i.namn !== ingrediens.namn))
+    setIngrediensar(prev => prev.filter(i => i.namn !== 
+ ingrediens.namn))
     setValgteIngrediensar(prev => prev.filter(i => i.namn !== ingrediens.namn))
   }
 
