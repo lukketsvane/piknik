@@ -1,0 +1,665 @@
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { X, Download, Plus, Utensils, Trash2, Settings, User, Users, Apple, Carrot, Milk, Fish, Beef, Volume2, VolumeX } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Anthropic from '@anthropic-ai/sdk'
+
+const client = new Anthropic({
+  apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
+  dangerouslyAllowBrowser: true
+})
+
+type Kategori = 'Frukt' | 'Grønsaker' | 'Meieri' | 'Fisk' | 'Bakevarer' | 'Kjøt' | 'Anna'
+
+type Eining = 'dl' | 'g' | 'hg' | 'kg' | 'stk' | 'ss' | 'ts'
+
+type Ingrediens = {
+  namn: string
+  mengde: number
+  eining: Eining
+  kategori: Kategori
+  bilde: string
+  brukar: { namn: string; farge: string } | null
+}
+
+type Oppskrift = {
+  tittel: string
+  skildring: string
+  ingrediensar: Ingrediens[]
+  steg: string[]
+}
+
+const standardIngredienser: Ingrediens[] = [
+  { namn: "Laks", mengde: 500, eining: "g", kategori: "Fisk", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Potet", mengde: 4, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Dill", mengde: 1, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+]
+
+const kategoriar: Kategori[] = ['Frukt', 'Grønsaker', 'Meieri', 'Fisk', 'Bakevarer', 'Kjøt', 'Anna']
+const einingar: Eining[] = ['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts']
+
+const kategoriIkon = {
+  Frukt: <Apple className="w-4 h-4" />,
+  Grønsaker: <Carrot className="w-4 h-4" />,
+  Meieri: <Milk className="w-4 h-4" />,
+  Fisk: <Fish className="w-4 h-4" />,
+  Bakevarer: <Utensils className="w-4 h-4" />,
+  Kjøt: <Beef className="w-4 h-4" />,
+  Anna: <Utensils className="w-4 h-4" />,
+}
+
+const userColors = ['#FFD700', '#FFB6C1', '#FF4500', '#9370DB', '#32CD32']
+
+const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (username: string, code: string) => void, onCreateSession: (username: string) => void }) => {
+  const [username, setUsername] = useState('')
+  const [sessionCode, setSessionCode] = useState('')
+  const [isCreatingSession, setIsCreatingSession] = useState(true)
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value)
+  }
+
+  const handleSessionCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+    setSessionCode(value)
+  }
+
+  const handleToggleSessionMode = () => {
+    setIsCreatingSession((prev) => !prev)
+  }
+
+  return (
+    <Card className="w-full max-w-md mx-auto mt-20 bg-white">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center text-purple-600">Velkomen til MatMix!</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="session-mode"
+              checked={isCreatingSession}
+              onCheckedChange={handleToggleSessionMode}
+            />
+            <Label htmlFor="session-mode" className="text-lg font-medium text-purple-700">
+              {isCreatingSession ? 'Lag økt' : 'Bli med i økt'}
+            </Label>
+          </div>
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Brukarnamn
+            </label>
+            <Input
+              id="username"
+              value={username}
+              onChange={handleUsernameChange}
+              placeholder="Skriv inn brukarnamnet ditt"
+              className="mt-1 bg-white"
+            />
+          </div>
+          {!isCreatingSession && (
+            <div>
+              <label htmlFor="sessionCode" className="block text-sm font-medium text-gray-700">
+                Økt-kode
+              </label>
+              <Input
+                id="sessionCode"
+                value={sessionCode}
+                onChange={handleSessionCodeChange}
+                placeholder="Skriv inn 4-sifra kode"
+                className="mt-1 bg-white"
+                maxLength={4}
+              />
+            </div>
+          )}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button 
+          onClick={() => isCreatingSession ? onCreateSession(username) : onJoinSession(username, sessionCode)} 
+          disabled={!username || (!isCreatingSession && sessionCode.length !== 4)}
+          className="w-full bg-purple-500 hover:bg-purple-600 text-white"
+        >
+          {isCreatingSession ? 'Lag økt' : 'Bli med i økt'}
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
+
+export default function MatMix({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
+  const router = useRouter()
+  const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>(standardIngredienser)
+  const [valgteIngrediensar, setValgteIngrediensar] = useState<Ingrediens[]>([])
+  const [nyIngrediens, setNyIngrediens] = useState<Ingrediens>({ namn: "", mengde: 0, eining: "stk", kategori: "Anna", bilde: "/placeholder.svg?height=40&width=40", brukar: null })
+  const [blandar, setBlandar] = useState(false)
+  const [oppskrift, setOppskrift] = useState<Oppskrift | null>(null)
+  const [gjeldandeIngrediens, setGjeldandeIngrediens] = useState("")
+  const [visLeggTilIngrediens, setVisLeggTilIngrediens] = useState(false)
+  const [redigeringIngrediens, setRedigeringIngrediens] = useState<Ingrediens | null>(null)
+  const [sessionStarted, setSessionStarted] = useState(false)
+  const [sessionCode, setSessionCode] = useState(initialSessionCode || '')
+  const [showSessionCode, setShowSessionCode] = useState(false)
+  const [currentUser, setCurrentUser] = useState<{ namn: string; farge: string } | null>(null)
+  const [participants, setParticipants] = useState<{ namn: string; farge: string }[]>([])
+  const [isMuted, setIsMuted] = useState(false)
+  const backgroundAudioRef = useRef<HTMLAudioElement | null>(null)
+  const generatingAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (initialSessionCode) {
+      setSessionStarted(true)
+      const username = `User${Math.floor(Math.random() * 1000)}`
+      const newUser = { namn: username, farge: userColors[0] }
+      setCurrentUser(newUser)
+      setParticipants([newUser])
+    }
+  }, [initialSessionCode])
+
+  useEffect(() => {
+    backgroundAudioRef.current = new Audio('/music/Endless Stairs (Quadratic).mp3')
+    backgroundAudioRef.current.loop = true
+    generatingAudioRef.current = new Audio('/music/alt03-answer_010sec.mp3')
+    generatingAudioRef.current.loop = true
+
+    return () => {
+      if (backgroundAudioRef.current) backgroundAudioRef.current.pause()
+      if (generatingAudioRef.current) generatingAudioRef.current.pause()
+    }
+  }, [])
+
+  useEffect(() => {
+    const playAudio = async (audio: HTMLAudioElement) => {
+      try {
+        await audio.play()
+      } catch (error) {
+        console.error("Error playing audio:", error)
+      }
+    }
+
+    if (backgroundAudioRef.current && generatingAudioRef.current) {
+      if (isMuted) {
+        backgroundAudioRef.current.pause()
+        generatingAudioRef.current.pause()
+      } else {
+        if (sessionStarted && !blandar) {
+          generatingAudioRef.current.pause()
+          playAudio(backgroundAudioRef.current)
+        } else if (blandar) {
+          backgroundAudioRef.current.pause()
+          playAudio(generatingAudioRef.current)
+        }
+      }
+    }
+  }, [isMuted, sessionStarted, blandar])
+
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      if (backgroundAudioRef.current && !isMuted) {
+        backgroundAudioRef.current.play().catch(error => console.error("Error playing background audio:", error))
+      }
+      document.removeEventListener('click', handleUserInteraction)
+    }
+
+    document.addEventListener('click', handleUserInteraction)
+
+    return () => {
+      document.removeEventListener('click', handleUserInteraction)
+    }
+  }, [isMuted])
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted)
+  }
+
+  const generateSessionCode = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString()
+  }
+
+  const handleCreateSession = (username: string) => {
+    const code = generateSessionCode()
+    setSessionCode(code)
+    const newUser = { namn: username, farge: userColors[0] }
+    setCurrentUser(newUser)
+    setParticipants([newUser])
+    setSessionStarted(true)
+    router.push(`/${code}`)
+  }
+
+  const handleJoinSession = (username: string, code: string) => {
+    if (participants.length < 6) {
+      const newUser = { namn: username, farge: userColors[participants.length] }
+      setCurrentUser(newUser)
+      setParticipants([...participants, newUser])
+      setSessionStarted(true)
+      router.push(`/${code}`)
+    } else {
+      alert('Økta er full')
+    }
+  }
+
+  const handterLeggTilIngrediens = () => {
+    if (nyIngrediens.namn && nyIngrediens.mengde > 0 && nyIngrediens.eining && !ingrediensar.some(i => i.namn === nyIngrediens.namn)) {
+      setIngrediensar([...ingrediensar, { ...nyIngrediens, brukar: currentUser }])
+      setNyIngrediens({ namn: "", mengde: 0, eining: "stk", kategori: "Anna", bilde: "/placeholder.svg?height=40&width=40", brukar: null })
+      setVisLeggTilIngrediens(false)
+    }
+  }
+
+  const handterIngrediensMerking = (ingrediens: Ingrediens) => {
+    setValgteIngrediensar(prev =>
+      prev.some(i => i.namn === ingrediens.namn)
+        ? prev.filter(i => i.namn !== ingrediens.namn)
+        : [...prev, ingrediens]
+    )
+  }
+
+  const handterSlettIngrediens = (ingrediens: Ingrediens) => {
+    setIngrediensar(prev => prev.filter(i => i.namn !== ingrediens.namn))
+    setValgteIngrediensar(prev => prev.filter(i => i.namn !== ingrediens.namn))
+  }
+
+  const handterRedigerIngrediens = (ingrediens: Ingrediens) => {
+    setRedigeringIngrediens(ingrediens)
+    setVisLeggTilIngrediens(true)
+  }
+
+  const handterOppdaterIngrediens = () => {
+    if (redigeringIngrediens) {
+      setIngrediensar(prev => prev.map(i => i.namn === redigeringIngrediens.namn ? { ...redigeringIngrediens, brukar: currentUser } : i))
+      setRedigeringIngrediens(null)
+      setVisLeggTilIngrediens(false)
+    }
+  }
+
+  const genererOppskrift = async () => {
+    setBlandar(true)
+    const ingrediensListe = valgteIngrediensar.map(i => `${i.mengde} ${i.eining} ${i.namn}`).join(', ')
+    
+    try {
+      const response = await client.messages.create({
+        model: "claude-3-opus-20240229",
+        max_tokens: 1000,
+        temperature: 0.7,
+        messages: [
+          {
+            role: "user",
+            content: `Lag en kreativ oppskrift på norsk med BARE følgende ingredienser, og ikke bruk mer enn de oppgitte mengdene: ${ingrediensListe}. 
+            Formater svaret slik:
+             
+            Tittel: [Oppskriftens tittel]
+            
+            Beskrivelse: [Kort beskrivelse av retten]
+            
+            Ingredienser:
+            - [mengde] [enhet] [ingrediens]
+            - [mengde] [enhet] [ingrediens]
+            ...
+            
+            Fremgangsmåte:
+            1. [Første steg]
+            2. [Andre steg]
+            ...
+            
+            Vær kreativ, men bruk BARE de oppgitte ingrediensene og ikke overskrid mengdene. Hvis du ikke bruker hele mengden av en ingrediens, spesifiser det i oppskriften.`
+          }
+        ]
+      })
+
+      const content = response.content[0].text
+      const lines = content.split('\n')
+      const tittel = lines[0].replace('Tittel: ', '').trim()
+      const skildring = lines[2].replace('Beskrivelse: ', '').trim()
+      const ingrediensarStart = lines.findIndex(line => line.includes('Ingredienser:'))
+      const stegStart = lines.findIndex(line => line.includes('Fremgangsmåte:'))
+
+      const ingrediensar = lines.slice(ingrediensarStart + 1, stegStart)
+        .filter(line => line.trim().startsWith('-'))
+        .map(line => {
+          const [mengde, eining, ...namn] = line.replace('-', '').trim().split(' ')
+          return {
+            namn: namn.join(' '),
+            mengde: parseFloat(mengde),
+            eining: eining as Eining,
+            kategori: 'Anna',
+            bilde: '/placeholder.svg?height=40&width=40',
+            brukar: null
+          }
+        })
+
+      const steg = lines.slice(stegStart + 1)
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+
+      setOppskrift({
+        tittel,
+        skildring,
+        ingrediensar,
+        steg
+      })
+
+    } catch (error) {
+      console.error('Feil ved generering av oppskrift:', error)
+      alert('Det oppstod en feil ved generering av oppskrift. Vennligst prøv igjen.')
+    } finally {
+      setBlandar(false)
+    }
+  }
+
+  const handterBlanding = () => {
+    setBlandar(true)
+    let indeks = 0
+    const intervallId = setInterval(() => {
+      setGjeldandeIngrediens(valgteIngrediensar[indeks].namn)
+      indeks = (indeks + 1) % valgteIngrediensar.length
+    }, 100)
+
+    setTimeout(() => {
+      clearInterval(intervallId)
+      genererOppskrift()
+    }, 3000)
+  }
+
+  const handterLukkOppskrift = () => {
+    setOppskrift(null)
+  }
+
+  const handterLastNedOppskrift = () => {
+    if (oppskrift) {
+      const oppskriftTekst = `
+        ${oppskrift.tittel}
+
+        ${oppskrift.skildring}
+
+        Ingrediensar:
+        ${oppskrift.ingrediensar.map(ing => `- ${ing.mengde} ${ing.eining} ${ing.namn}`).join('\n')}
+
+        Framgangsmåte:
+        ${oppskrift.steg.map((steg, index) => `${index + 1}. ${steg}`).join('\n')}
+      `
+
+      const blob = new Blob([oppskriftTekst], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${oppskrift.tittel}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  }
+
+  if (!sessionStarted) {
+    return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
+  }
+
+  return (
+    <div className="w-full min-h-screen bg-white">
+      <div className="max-w-[1920px] mx-auto px-4 py-8 pb-24 sm:pb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" onClick={() => setShowSessionCode(true)} className="bg-white hover:bg-gray-100">
+              <Users className="w-4 h-4 mr-2" />
+              Del økt
+            </Button>
+            <h1 className="text-3xl font-bold text-purple-600">MatMix!</h1>
+          </div>
+          <div className="flex space-x-2">
+            {participants.map((participant, index) => (
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      style={{ backgroundColor: participant.farge }}
+                    >
+                      {participant.namn.charAt(0).toUpperCase()}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{participant.namn}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-purple-600">Ingrediensar</h2>
+            <Button onClick={() => setVisLeggTilIngrediens(true)} variant="outline" className="text-purple-500 border-purple-500 hover:bg-purple-50" size="icon">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+            {ingrediensar.map((ingrediens) => (
+              <div key={ingrediens.namn} className="flex items-center space-x-2">
+                <Checkbox
+                  id={ingrediens.namn}
+                  checked={valgteIngrediensar.some(i => i.namn === ingrediens.namn)}
+                  onCheckedChange={() => handterIngrediensMerking(ingrediens)}
+                  className="sr-only"
+                />
+                <label
+                  htmlFor={ingrediens.namn}
+                  className={`flex items-center w-full p-2 rounded-lg shadow-sm transition-colors duration-200 ease-in-out cursor-pointer ${
+                    valgteIngrediensar.some(i => i.namn === ingrediens.namn)
+                      ? 'bg-purple-100 border-purple-500'
+                      : 'bg-white border-gray-200'
+                  } border relative`}
+                >
+                  {ingrediens.brukar && (
+                    <div className={`absolute -top-1 -left-1 w-3 h-3 rounded-full flex items-center justify-center text-white text-[10px]`} style={{ backgroundColor: ingrediens.brukar.farge }}>
+                      {ingrediens.brukar.namn.split(' ').map(n => n[0]).join('')}
+                    </div>
+                  )}
+                  
+                  <div className="w-8 h-8 mr-2 rounded-full bg-gray-200 flex items-center justify-center">
+                    {kategoriIkon[ingrediens.kategori]}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="font-medium text-sm">{ingrediens.namn}</div>
+                    <div className="text-xs text-gray-500 flex items-center">
+                      {ingrediens.mengde} {ingrediens.eining}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Button variant="ghost" size="icon" onClick={() => handterRedigerIngrediens(ingrediens)}>
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handterSlettIngrediens(ingrediens)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+          <Button 
+            onClick={handterBlanding} 
+            disabled={valgteIngrediensar.length < 2 || blandar}
+            className="w-64 bg-purple-500 hover:bg-purple-600 text-white"
+          >
+            {blandar ? "Blandar..." : "Bland!"}
+          </Button>
+        </div>
+
+        <div className="fixed bottom-4 left-4 z-10">
+          <Button variant="outline" size="icon" onClick={toggleMute}>
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {blandar && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-32 h-32 flex items-center justify-center">
+              <div className="text-center animate-bounce">
+                {gjeldandeIngrediens}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Dialog open={visLeggTilIngrediens} onOpenChange={setVisLeggTilIngrediens}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>{redigeringIngrediens ? 'Rediger ingrediens' : 'Legg til ny ingrediens'}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Input
+                  id="namn"
+                  placeholder="Ingrediensnamn"
+                  value={redigeringIngrediens ? redigeringIngrediens.namn : nyIngrediens.namn}
+                  onChange={(e) => redigeringIngrediens 
+                    ? setRedigeringIngrediens({...redigeringIngrediens, namn: e.target.value})
+                    : setNyIngrediens({...nyIngrediens, namn: e.target.value})
+                  }
+                  className="col-span-4"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Select
+                  value={redigeringIngrediens ? redigeringIngrediens.kategori : nyIngrediens.kategori}
+                  onValueChange={(value: Kategori) => redigeringIngrediens
+                    ? setRedigeringIngrediens({...redigeringIngrediens, kategori: value})
+                    : setNyIngrediens({...nyIngrediens, kategori: value})
+                  }
+                >
+                  <SelectTrigger className="col-span-4">
+                    <SelectValue placeholder="Vel kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {kategoriar.map((kategori) => (
+                      <SelectItem key={kategori} value={kategori}>
+                        <div className="flex items-center">
+                          {kategoriIkon[kategori]}
+                          <span className="ml-2">{kategori}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Input
+                  id="mengde"
+                  type="number"
+                  placeholder="Mengde"
+                  value={redigeringIngrediens ? redigeringIngrediens.mengde : nyIngrediens.mengde || ""}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    redigeringIngrediens 
+                      ? setRedigeringIngrediens({...redigeringIngrediens, mengde: value})
+                      : setNyIngrediens({...nyIngrediens, mengde: value})
+                  }}
+                  className="col-span-2"
+                />
+                <Select
+                  value={redigeringIngrediens ? redigeringIngrediens.eining : nyIngrediens.eining}
+                  onValueChange={(value: Eining) => redigeringIngrediens
+                    ? setRedigeringIngrediens({...redigeringIngrediens, eining: value})
+                    : setNyIngrediens({...nyIngrediens, eining: value})
+                  }
+                >
+                  <SelectTrigger className="col-span-2">
+                    <SelectValue placeholder="Vel eining" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {einingar.map((eining) => (
+                      <SelectItem key={eining} value={eining}>
+                        {eining}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={redigeringIngrediens ? handterOppdaterIngrediens : handterLeggTilIngrediens} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
+              {redigeringIngrediens ? 'Oppgrader ingrediens' : 'Legg til ingrediens'}
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        {oppskrift && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <Card className="w-full max-w-2xl h-[90vh] flex flex-col bg-white">
+              <CardHeader className="flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="pr-8 truncate">{oppskrift.tittel}</CardTitle>
+                  <div className="flex space-x-2 flex-shrink-0">
+                    <Button variant="ghost" size="icon" onClick={handterLastNedOppskrift}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={handterLukkOppskrift}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <ScrollArea className="flex-grow">
+                <CardContent>
+                  <p className="mb-4">{oppskrift.skildring}</p>
+                  
+                  <h3 className="text-xl font-semibold mb-2">Ingrediensar</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ingrediens</TableHead>
+                        <TableHead>Mengde</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {oppskrift.ingrediensar.map((ing, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{ing.namn}</TableCell>
+                          <TableCell>{ing.mengde} {ing.eining}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  <h3 className="text-xl font-semibold mt-6 mb-2">Framgangsmåte</h3>
+                  <ol className="list-decimal list-inside">
+                    {oppskrift.steg.map((steg, index) => (
+                      <li key={index} className="mb-2">{steg}</li>
+                    ))}
+                  </ol>
+                </CardContent>
+              </ScrollArea>
+            </Card>
+          </div>
+        )}
+
+        <Dialog open={showSessionCode} onOpenChange={setShowSessionCode}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Del økt</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-center text-2xl font-bold">{sessionCode}</p>
+              <p className="text-center mt-2">Del denne koden med andre for å bli med i økta di.</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}

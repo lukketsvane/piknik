@@ -1,0 +1,47 @@
+c:/Users/Shadow/Documents/GitHub/matmix/
+  ├─].next/ (ignored)
+  ├─].vercel/ (ignored)
+  ├─ app/
+  │  ├─ fonts/
+  │  │  ├─ GeistMonoVF.woff
+  │  │  └─ GeistVF.woff
+  │  ├─ favicon.ico
+  │  ├─ globals.css
+  │  ├─ layout.tsx
+  │  └─ page.tsx
+  ├─ components/
+  │  ├─ ui/
+  │  │  ├─ button.tsx
+  │  │  ├─ card.tsx
+  │  │  ├─ checkbox.tsx
+  │  │  ├─ dialog.tsx
+  │  │  ├─ input.tsx
+  │  │  ├─ label.tsx
+  │  │  ├─ scroll-area.tsx
+  │  │  ├─ select.tsx
+  │  │  ├─ switch.tsx
+  │  │  ├─ table.tsx
+  │  │  └─ tooltip.tsx
+  │  └─ matmix.tsx
+  ├─ lib/
+  │  └─ utils.ts
+  ├─]node_modules/ (ignored)
+  ├─ public/
+  │  └─ music/
+  │     ├─ alt03-answer_010sec.mp3
+  │     ├─ Endless Stairs (Quadratic).mp3
+  │     └─ lobby-classic-game.mp3
+  ├─ .env
+  ├─].env.local (ignored)
+  ├─ .eslintrc.json
+  ├─ .gitignore
+  ├─ components.json
+  ├─ filetree.txt
+  ├─]next-env.d.ts (ignored)
+  ├─ next.config.mjs
+  ├─ package-lock.json
+  ├─ package.json
+  ├─ postcss.config.mjs
+  ├─ README.md
+  ├─ tailwind.config.ts
+  └─ tsconfig.json
