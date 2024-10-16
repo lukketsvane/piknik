@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { usePDF } from 'react-to-pdf'
+import Anthropic from '@anthropic-ai/sdk'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,35 +17,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import Anthropic from '@anthropic-ai/sdk'
-import { usePDF } from 'react-to-pdf'
-import Link from 'next/link'
-import Image from 'next/image'
 
-const client = new Anthropic({
-  apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
-  dangerouslyAllowBrowser: true
-})
+const client = new Anthropic({ apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY, dangerouslyAllowBrowser: true })
 
 type Kategori = 'Frukt' | 'Grønsaker' | 'Meieri' | 'Fisk' | 'Bakevarer' | 'Kjøt' | 'Anna'
-
 type Eining = 'dl' | 'g' | 'hg' | 'kg' | 'stk' | 'ss' | 'ts'
-
-type Ingrediens = {
-  namn: string
-  mengde: number
-  eining: Eining
-  kategori: Kategori
-  bilde: string
-  brukar: { namn: string; farge: string } | null
-}
-
-type Oppskrift = {
-  tittel: string
-  skildring: string
-  ingrediensar: Ingrediens[]
-  steg: string[]
-}
+type Ingrediens = { namn: string; mengde: number; eining: Eining; kategori: Kategori; bilde: string; brukar: { namn: string; farge: string } | null }
+type Oppskrift = { tittel: string; skildring: string; ingrediensar: Ingrediens[]; steg: string[] }
 
 const alleIngredienser: Ingrediens[] = [
   { namn: "Laks", mengde: 500, eining: "g", kategori: "Fisk", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
@@ -57,43 +38,15 @@ const alleIngredienser: Ingrediens[] = [
   { namn: "Eple", mengde: 3, eining: "stk", kategori: "Frukt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
 ]
 
-const getRandomIngredients = (count: number): Ingrediens[] => {
-  const shuffled = [...alleIngredienser].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
-}
-
 const kategoriar: Kategori[] = ['Frukt', 'Grønsaker', 'Meieri', 'Fisk', 'Bakevarer', 'Kjøt', 'Anna']
 const einingar: Eining[] = ['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts']
-
-const kategoriIkon = {
-  Frukt: <Apple className="w-4 h-4" />,
-  Grønsaker: <Carrot className="w-4 h-4" />,
-  Meieri: <Milk className="w-4 h-4" />,
-  Fisk: <Fish className="w-4 h-4" />,
-  Bakevarer: <Utensils className="w-4 h-4" />,
-  Kjøt: <Beef className="w-4 h-4" />,
-  Anna: <Utensils className="w-4 h-4" />,
-}
-
+const kategoriIkon = { Frukt: <Apple className="w-4 h-4" />, Grønsaker: <Carrot className="w-4 h-4" />, Meieri: <Milk className="w-4 h-4" />, Fisk: <Fish className="w-4 h-4" />, Bakevarer: <Utensils className="w-4 h-4" />, Kjøt: <Beef className="w-4 h-4" />, Anna: <Utensils className="w-4 h-4" /> }
 const userColors = ['#FFD700', '#FFB6C1', '#FF4500', '#9370DB', '#32CD32']
 
 const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (username: string, code: string) => void, onCreateSession: (username: string) => void }) => {
   const [username, setUsername] = useState('')
   const [sessionCode, setSessionCode] = useState('')
   const [isCreatingSession, setIsCreatingSession] = useState(true)
-
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value)
-  }
-
-  const handleSessionCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
-    setSessionCode(value)
-  }
-
-  const handleToggleSessionMode = () => {
-    setIsCreatingSession((prev) => !prev)
-  }
 
   return (
     <Card className="w-full max-w-md mx-auto mt-20 bg-white relative">
@@ -109,56 +62,25 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
-            <Switch
-              id="session-mode"
-              checked={isCreatingSession}
-              onCheckedChange={handleToggleSessionMode}
-            />
-            <Label htmlFor="session-mode" className="text-lg font-medium text-purple-700">
-              {isCreatingSession ? 'Lag økt' : 'Bli med i økt'}
-            </Label>
+            <Switch id="session-mode" checked={isCreatingSession} onCheckedChange={() => setIsCreatingSession(prev => !prev)} />
+            <Label htmlFor="session-mode" className="text-lg font-medium text-purple-700">{isCreatingSession ? 'Lag økt' : 'Bli med i økt'}</Label>
           </div>
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Brukarnamn
-            </label>
-            <Input
-              id="username"
-              value={username}
-              onChange={handleUsernameChange}
-              placeholder="Skriv inn brukarnamnet ditt"
-              className="mt-1 bg-white"
-            />
-          </div>
-          {!isCreatingSession && (
-            <div>
-              <label htmlFor="sessionCode" className="block text-sm font-medium text-gray-700">
-                Økt-kode
-              </label>
-              <Input
-                id="sessionCode"
-                value={sessionCode}
-                onChange={handleSessionCodeChange}
-                placeholder="Skriv inn 4-sifra kode"
-                className="mt-1 bg-white"
-                maxLength={4}
-              />
-            </div>
-          )}
+          <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Skriv inn brukarnamnet ditt" className="mt-1 bg-white" />
+          {!isCreatingSession && <Input id="sessionCode" value={sessionCode} onChange={(e) => setSessionCode(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="Skriv inn 4-sifra kode" className="mt-1 bg-white" maxLength={4} />}
         </div>
       </CardContent>
       <CardFooter>
-        <Button 
-          onClick={() => isCreatingSession ? onCreateSession(username) : onJoinSession(username, sessionCode)} 
-          disabled={!username || (!isCreatingSession && sessionCode.length !== 4)}
-          className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-        >
+        <Button onClick={() => isCreatingSession ? onCreateSession(username) : onJoinSession(username, sessionCode)} 
+                disabled={!username || (!isCreatingSession && sessionCode.length !== 4)}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white">
           {isCreatingSession ? 'Lag økt' : 'Bli med i økt'}
         </Button>
       </CardFooter>
     </Card>
   )
 }
+
+const getRandomIngredients = (count: number): Ingrediens[] => alleIngredienser.sort(() => 0.5 - Math.random()).slice(0, count)
 
 export default function PikNik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
@@ -179,19 +101,7 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
   const [showInfo, setShowInfo] = useState(false)
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null)
   const generatingAudioRef = useRef<HTMLAudioElement | null>(null)
-  const { toPDF, targetRef } = usePDF({
-    filename: 'piknik-oppskrift.pdf',
-    page: { 
-      margin: 20,
-      format: 'A4',
-      orientation: 'landscape'
-    },
-    view: {
-      
-      width: 1190, // A4 landscape width in points (doubled from 595)
-      height: 842 // A4 height in points (unchanged)
-    }
-  })
+  const { toPDF, targetRef } = usePDF({ filename: 'piknik-oppskrift.pdf', page: { margin: 20, format: 'A4', orientation: 'landscape' }, view: { width: 1190, height: 842 } })
 
   useEffect(() => {
     if (initialSessionCode) {
@@ -202,29 +112,20 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
       setParticipants([newUser])
       setIngrediensar(getRandomIngredients(3))
     }
-  }, [initialSessionCode])
-
-  useEffect(() => {
     backgroundAudioRef.current = new Audio('/music/lobby-classic-game.mp3')
-    backgroundAudioRef.current.loop = true
     generatingAudioRef.current = new Audio('/music/alt03-answer_010sec.mp3')
+    backgroundAudioRef.current.loop = true
     generatingAudioRef.current.loop = true
-
     return () => {
       if (backgroundAudioRef.current) backgroundAudioRef.current.pause()
       if (generatingAudioRef.current) generatingAudioRef.current.pause()
     }
-  }, [])
+  }, [initialSessionCode])
 
   useEffect(() => {
     const playAudio = async (audio: HTMLAudioElement) => {
-      try {
-        await audio.play()
-      } catch (error) {
-        console.error("Error playing audio:", error)
-      }
+      try { await audio.play() } catch (error) { console.error("Error playing audio:", error) }
     }
-
     if (backgroundAudioRef.current && generatingAudioRef.current) {
       if (isMuted) {
         backgroundAudioRef.current.pause()
@@ -248,21 +149,12 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
       }
       document.removeEventListener('click', handleUserInteraction)
     }
-
     document.addEventListener('click', handleUserInteraction)
-
-    return () => {
-      document.removeEventListener('click', handleUserInteraction)
-    }
+    return () => document.removeEventListener('click', handleUserInteraction)
   }, [isMuted])
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted)
-  }
-
-  const generateSessionCode = () => {
-    return Math.floor(1000 + Math.random() * 9000).toString()
-  }
+  const toggleMute = () => setIsMuted(!isMuted)
+  const generateSessionCode = () => Math.floor(1000 + Math.random() * 9000).toString()
 
   const handleCreateSession = (username: string) => {
     const code = generateSessionCode()
@@ -296,12 +188,7 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
   }
 
   const handterIngrediensMerking = (ingrediens: Ingrediens) => {
-    setValgteIngrediensar(prev =>
-      prev.some(i => i.namn === ingrediens.namn)
-        
-        ? prev.filter(i => i.namn !== ingrediens.namn)
-        : [...prev, ingrediens]
-    )
+    setValgteIngrediensar(prev => prev.some(i => i.namn === ingrediens.namn) ? prev.filter(i => i.namn !== ingrediens.namn) : [...prev, ingrediens])
   }
 
   const handterSlettIngrediens = (ingrediens: Ingrediens) => {
@@ -322,72 +209,32 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
     }
   }
 
-  const genererOppskrift = async () => {
+  const  genererOppskrift = async () => {
     setBlandar(true)
     const ingrediensListe = valgteIngrediensar.map(i => `${i.mengde} ${i.eining} ${i.namn}`).join(', ')
-    
     try {
       const response = await client.messages.create({
         model: "claude-3-opus-20240229",
         max_tokens: 1000,
         temperature: 0.7,
-        messages: [
-          {
-            role: "user",
-            content: `Lag en kreativ oppskrift på norsk med BARE følgende ingredienser, og ikke bruk mer enn de oppgitte mengdene: ${ingrediensListe}. 
-            Formater svaret slik:
-             
-            Tittel: [Oppskriftens tittel]
-            
-            Beskrivelse: [Kort beskrivelse av retten]
-            
-            Ingredienser:
-            - [mengde] [enhet] [ingrediens]
-            - [mengde] [enhet] [ingrediens]
-            ...
-            
-            Fremgangsmåte:
-            1. [Første steg]
-            2. [Andre steg]
-            ...
-            
-            Vær kreativ, men bruk BARE de oppgitte ingrediensene og ikke overskrid mengdene. Hvis du ikke bruker hele mengden av en ingrediens, spesifiser det i oppskriften.`.replace(/"/g, '&quot;')
-          }
-        ]
+        messages: [{ role: "user", content: `Lag en kreativ oppskrift på norsk med BARE følgende ingredienser, og ikke bruk mer enn de oppgitte mengdene: ${ingrediensListe}. Formater svaret slik: Tittel: [Oppskriftens tittel] Beskrivelse: [Kort beskrivelse av retten] Ingredienser: - [mengde] [enhet] [ingrediens] Fremgangsmåte: 1. [Første steg] 2. [Andre steg] ... Vær kreativ, men bruk BARE de oppgitte ingrediensene og ikke overskrid mengdene. Hvis du ikke bruker hele mengden av en ingrediens, spesifiser det i oppskriften.`.replace(/"/g, '&quot;') }]
       })
-
       const content = response.content[0].text
       const lines = content.split('\n')
       const tittel = lines[0].replace('Tittel: ', '').trim()
       const skildring = lines[2].replace('Beskrivelse: ', '').trim()
       const ingrediensarStart = lines.findIndex(line => line.includes('Ingredienser:'))
       const stegStart = lines.findIndex(line => line.includes('Fremgangsmåte:'))
-
       const ingrediensar = lines.slice(ingrediensarStart + 1, stegStart)
         .filter(line => line.trim().startsWith('-'))
         .map(line => {
           const [mengde, eining, ...namn] = line.replace('-', '').trim().split(' ')
-          return {
-            namn: namn.join(' '),
-            mengde: parseFloat(mengde),
-            eining: eining as Eining,
-            kategori: 'Anna',
-            bilde: '/placeholder.svg?height=40&width=40',
-            brukar: null
-          }
+          return { namn: namn.join(' '), mengde: parseFloat(mengde), eining: eining as Eining, kategori: 'Anna', bilde: '/placeholder.svg?height=40&width=40', brukar: null }
         })
-
       const steg = lines.slice(stegStart + 1)
         .filter(line => /^\d+\./.test(line.trim()))
         .map(line => line.replace(/^\d+\.\s*/, '').trim())
-
-      setOppskrift({
-        tittel,
-        skildring,
-        ingrediensar,
-        steg
-      })
-
+      setOppskrift({ tittel, skildring, ingrediensar, steg })
     } catch (error) {
       console.error('Feil ved generering av oppskrift:', error)
       alert('Det oppstod en feil ved generering av oppskrift. Vennligst prøv igjen.')
@@ -403,28 +250,13 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
       setGjeldandeIngrediens(valgteIngrediensar[indeks].namn)
       indeks = (indeks + 1) % valgteIngrediensar.length
     }, 100)
-
     setTimeout(() => {
       clearInterval(intervallId)
       genererOppskrift()
     }, 3000)
   }
 
-  const handterLukkOppskrift = () => {
-    setOppskrift(null)
-  }
-
-  const handterLastNedOppskrift = () => {
-    if (oppskrift) {
-      setTimeout(() => {
-        toPDF()
-      }, 100)
-    }
-  }
-
-  if (!sessionStarted) {
-    return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
-  }
+  if (!sessionStarted) return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
 
   return (
     <div className="w-full min-h-[calc(100vh-8rem)] bg-white flex flex-col items-center justify-center py-4 md:pt-12">
@@ -446,10 +278,7 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
                 <TooltipProvider key={index}>
                   <Tooltip>
                     <TooltipTrigger>
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: participant.farge }}
-                      >
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: participant.farge }}>
                         {participant.namn.charAt(0).toUpperCase()}
                       </div>
                     </TooltipTrigger>
@@ -461,7 +290,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
               ))}
             </div>
           </div>
-          
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-purple-600">Ingrediensar</h2>
@@ -472,26 +300,13 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ingrediensar.map((ingrediens) => (
                 <div key={ingrediens.namn} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={ingrediens.namn}
-                    checked={valgteIngrediensar.some(i => i.namn === ingrediens.namn)}
-                    onCheckedChange={() => handterIngrediensMerking(ingrediens)}
-                    className="sr-only"
-                  />
-                  <label
-                    htmlFor={ingrediens.namn}
-                    className={`flex items-center w-full p-2 rounded-lg shadow-sm transition-colors duration-200 ease-in-out cursor-pointer ${
-                      valgteIngrediensar.some(i => i.namn === ingrediens.namn)
-                        ? 'bg-purple-100 border-purple-500'
-                        : 'bg-white border-gray-200'
-                    } border relative`}
-                  >
+                  <Checkbox id={ingrediens.namn} checked={valgteIngrediensar.some(i => i.namn === ingrediens.namn)} onCheckedChange={() => handterIngrediensMerking(ingrediens)} className="sr-only" />
+                  <label htmlFor={ingrediens.namn} className={`flex items-center w-full p-2 rounded-lg shadow-sm transition-colors duration-200 ease-in-out cursor-pointer ${valgteIngrediensar.some(i => i.namn === ingrediens.namn) ? 'bg-purple-100 border-purple-500' : 'bg-white border-gray-200'} border relative`}>
                     {ingrediens.brukar && (
                       <div className={`absolute -top-1 -left-1 w-3 h-3 rounded-full flex items-center justify-center text-white text-[10px]`} style={{ backgroundColor: ingrediens.brukar.farge }}>
                         {ingrediens.brukar.namn.split(' ').map(n => n[0]).join('')}
                       </div>
                     )}
-                    
                     <div className="w-8 h-8 mr-2 rounded-full bg-gray-200 flex items-center justify-center">
                       {kategoriIkon[ingrediens.kategori]}
                     </div>
@@ -514,14 +329,9 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
               ))}
             </div>
           </div>
-
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-white">
             <div className="w-full max-w-md mx-auto">
-              <Button 
-                onClick={handterBlanding} 
-                disabled={valgteIngrediensar.length < 2 || blandar}
-                className="w-full bg-purple-500 hover:bg-purple-600 text-white"
-              >
+              <Button onClick={handterBlanding} disabled={valgteIngrediensar.length < 2 || blandar} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
                 {blandar ? "Blandar..." : "Bland!"}
               </Button>
             </div>
@@ -531,7 +341,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
           <div className="w-32 h-4 bg-gray-300 rounded-full"></div>
         </div>
       </div>
-
       {blandar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-lg w-32 h-32 flex items-center justify-center">
@@ -541,88 +350,45 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
           </div>
         </div>
       )}
-
       <Dialog open={visLeggTilIngrediens} onOpenChange={setVisLeggTilIngrediens}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{redigeringIngrediens ? 'Rediger ingrediens' : 'Legg til ny ingrediens'}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Input
-                id="namn"
-                placeholder="Ingrediensnamn"
-                value={redigeringIngrediens ? redigeringIngrediens.namn : nyIngrediens.namn}
-                onChange={(e) => redigeringIngrediens 
-                  ? setRedigeringIngrediens({...redigeringIngrediens, namn: e.target.value})
-                  : setNyIngrediens({...nyIngrediens, namn: e.target.value})
-                }
-                className="col-span-4"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Select
-                value={redigeringIngrediens ? redigeringIngrediens.kategori : nyIngrediens.kategori}
-                onValueChange={(value: Kategori) => redigeringIngrediens
-                  ? setRedigeringIngrediens({...redigeringIngrediens, kategori: value})
-                  : setNyIngrediens({...nyIngrediens, kategori: value})
-                }
-              >
-                <SelectTrigger className="col-span-4">
-                  <SelectValue placeholder="Vel kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  {kategoriar.map((kategori) => (
-                    <SelectItem key={kategori} value={kategori}>
-                      <div className="flex items-center">
-                        {kategoriIkon[kategori]}
-                        <span className="ml-2">{kategori}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Input
-                id="mengde"
-                type="number"
-                placeholder="Mengde"
-                value={redigeringIngrediens ? redigeringIngrediens.mengde : nyIngrediens.mengde || ""}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  redigeringIngrediens 
-                    ? setRedigeringIngrediens({...redigeringIngrediens, mengde: value})
-                    : setNyIngrediens({...nyIngrediens, mengde: value})
-                }}
-                className="col-span-2"
-              />
-              <Select
-                value={redigeringIngrediens ? redigeringIngrediens.eining : nyIngrediens.eining}
-                onValueChange={(value: Eining) => redigeringIngrediens
-                  ? setRedigeringIngrediens({...redigeringIngrediens, eining: value})
-                  : setNyIngrediens({...nyIngrediens, eining: value})
-                }
-              >
-                <SelectTrigger className="col-span-2">
-                  <SelectValue placeholder="Vel eining" />
-                </SelectTrigger>
-                <SelectContent>
-                  {einingar.map((eining) => (
-                    <SelectItem key={eining} value={eining}>
-                      {eining}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Input id="namn" placeholder="Ingrediensnamn" value={redigeringIngrediens ? redigeringIngrediens.namn : nyIngrediens.namn} onChange={(e) => redigeringIngrediens ? setRedigeringIngrediens({...redigeringIngrediens, namn: e.target.value}) : setNyIngrediens({...nyIngrediens, namn: e.target.value})} className="col-span-4" />
+            <Select value={redigeringIngrediens ? redigeringIngrediens.kategori : nyIngrediens.kategori} onValueChange={(value: Kategori) => redigeringIngrediens ? setRedigeringIngrediens({...redigeringIngrediens, kategori: value}) : setNyIngrediens({...nyIngrediens, kategori: value})}>
+              <SelectTrigger className="col-span-4">
+                <SelectValue placeholder="Vel kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                {kategoriar.map((kategori) => (
+                  <SelectItem key={kategori} value={kategori}>
+                    <div className="flex items-center">
+                      {kategoriIkon[kategori]}
+                      <span className="ml-2">{kategori}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input id="mengde" type="number" placeholder="Mengde" value={redigeringIngrediens ? redigeringIngrediens.mengde : nyIngrediens.mengde || ""} onChange={(e) => { const value = parseFloat(e.target.value); redigeringIngrediens ? setRedigeringIngrediens({...redigeringIngrediens, mengde: value}) : setNyIngrediens({...nyIngrediens, mengde: value}) }} className="col-span-2" />
+            <Select value={redigeringIngrediens ? redigeringIngrediens.eining : nyIngrediens.eining} onValueChange={(value: Eining) => redigeringIngrediens ? setRedigeringIngrediens({...redigeringIngrediens, eining: value}) : setNyIngrediens({...nyIngrediens, eining: value})}>
+              <SelectTrigger className="col-span-2">
+                <SelectValue placeholder="Vel eining" />
+              </SelectTrigger>
+              <SelectContent>
+                {einingar.map((eining) => (
+                  <SelectItem key={eining} value={eining}>{eining}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <Button onClick={redigeringIngrediens ? handterOppdaterIngrediens : handterLeggTilIngrediens} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
             {redigeringIngrediens ? 'Oppdater ingrediens' : 'Legg til ingrediens'}
           </Button>
         </DialogContent>
       </Dialog>
-
       {oppskrift && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <Card className="w-full max-w-md h-[90vh] flex flex-col bg-white">
@@ -630,10 +396,10 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
               <div className="flex items-center justify-between">
                 <CardTitle className="pr-8 truncate">{oppskrift.tittel}</CardTitle>
                 <div className="flex space-x-2 flex-shrink-0">
-                  <Button variant="ghost" size="icon" onClick={handterLastNedOppskrift}>
+                  <Button variant="ghost" size="icon" onClick={() => setTimeout(() => toPDF(), 100)}>
                     <Download className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={handterLukkOppskrift}>
+                  <Button variant="ghost" size="icon" onClick={() => setOppskrift(null)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -643,7 +409,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
               <CardContent ref={targetRef} className="p-6 max-w-3xl mx-auto">
                 <h2 className="text-2xl font-bold mb-4">{oppskrift.tittel}</h2>
                 <p className="mb-6">{oppskrift.skildring}</p>
-                
                 <h3 className="text-xl font-semibold mb-2">Ingrediensar</h3>
                 <Table>
                   <TableHeader>
@@ -661,7 +426,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
                     ))}
                   </TableBody>
                 </Table>
-
                 <h3 className="text-xl font-semibold mt-6 mb-2">Framgangsmåte</h3>
                 <ol className="list-decimal list-inside">
                   {oppskrift.steg.map((steg, index) => (
@@ -673,7 +437,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
           </Card>
         </div>
       )}
-
       <div className="fixed bottom-4 left-4 z-50 flex space-x-2">
         <Button variant="outline" size="icon" onClick={toggleMute}>
           {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -682,7 +445,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
           <Info className="h-4 w-4" />
         </Button>
       </div>
-
       <Dialog open={showSessionCode} onOpenChange={setShowSessionCode}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -694,7 +456,6 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
           </div>
         </DialogContent>
       </Dialog>
-
       <Dialog open={showInfo} onOpenChange={setShowInfo}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -706,7 +467,7 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
             <ol className="list-decimal list-inside">
               <li>Legg til ingredienser du har tilgjengelig</li>
               <li>Velg ingrediensene du vil bruke i oppskriften</li>
-              <li>Trykk på &quot;Bland!&quot; for å generere en unik oppskrift</li>
+              <li>Trykk på "Bland!" for å generere en unik oppskrift</li>
               <li>Del oppskriften med vennene dine eller last den ned</li>
             </ol>
           </div>
