@@ -8,7 +8,7 @@
 
 ## Oversikt
 
-MatMix er ei plattform der brukarar kan skape kreative måltid i fellesskap, gjennom å samarbeide om ingrediensane dei har tilgjengeleg. Gjennom sanntidsinteraksjon og AI-assistert oppskriftsgenerering, tilbyr MatMix ei sosial og innovativ tilnærming til matlaging.
+🥗 MatMix er ei plattform der brukarar kan skape kreative måltid i fellesskap, gjennom å samarbeide om ingrediensane dei har tilgjengeleg. 🕒🤖 Gjennom sanntidsinteraksjon og AI-assistert oppskriftsgenerering, tilbyr MatMix ei sosial og innovativ tilnærming til matlaging.
 
 MatMix er ei interaktiv matlagingsapp der brukarar kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensane dei har. Dette dokumentet gir oversikt over funksjonane, teknisk arkitektur, datamodell og brukarforteljingar som viser korleis applikasjonen kan brukast.
 
@@ -71,17 +71,17 @@ matmix/
 
 ## Hovudfunksjonar
 
-- **Sanntids Samarbeid**: Brukarar kan opprette eller bli med i ei økt (opp til seks personar) for å legge til ingrediensar.
-- **Ingredienshåndtering**: Brukarar kan legge til, redigere og slette ingrediensar.
-- **AI-drevet Oppskriftsgenerering**: Bruk AI for å generere ei oppskrift basert på valde ingrediensar.
-- **Øktstyring**: Den som opprettar ei økt kan styre prosessen, inkludert avstemming og nedteljing.
+- **🔄 Sanntids Samarbeid**: Brukarar kan opprette eller bli med i ei økt (opp til seks personar) for å legge til ingrediensar.
+- **📝 Ingredienshåndtering**: Brukarar kan legge til, redigere og slette ingrediensar.
+- **🤖 AI-drevet 🍲 Oppskriftsgenerering**: Bruk AI for å generere ei oppskrift basert på valde ingrediensar.
+- **🔑 Øktstyring**: Den som opprettar ei økt kan styre prosessen, inkludert avstemming og nedteljing.
 
 ---
 
 ## Brukargrensesnitt
 
-- **Innlogging**: Start ei ny økt eller bli med i ei eksisterande ved å bruke ein 4-sifra kode.
-- **Hovudskjerm**: Liste over ingrediensar som brukarar kan leggje til, redigere eller slette.
+- **🔐 Innlogging**: Start ei ny økt eller bli med i ei eksisterande ved å bruke ein 4-sifra kode.
+- **🏠 Hovudskjerm**: Liste over ingrediensar som brukarar kan leggje til, redigere eller slette.
 - **Oppskriftsgenerering**: Generer oppskrifter ved hjelp av AI og last dei ned eller del dei.
 
 ---
@@ -91,7 +91,7 @@ matmix/
 ### 1. Småbarnsfamilien
 
 ```mermaid
-graph TD
+graph LR
     A[Start Økt] -->|Brukarnamn + Øktkode| B[Opprett Økt]
     B --> C[Barna Legg til Ingrediensar]
     C -->|Poteter, Gulrot, Laks, Dill| D[AI Genererer Oppskrift]
@@ -99,14 +99,14 @@ graph TD
     E --> F[Alle Lagar Mat Sammen]
 ```
 
-**Beskrivelse**: Kari og familien brukar MatMix til å lage middag saman. Barna legg til ingrediensar dei finn på kjøkenet, og AI-en lagar ei enkel oppskrift som alle kan vere med på å lage.
+**Beskrivelse**: 👨‍👩‍👧‍👦 Kari og familien brukar MatMix til å lage middag saman. 👶🧑‍🍳 Barna legg til ingrediensar dei finn på kjøkenet, og AI-en lagar ei enkel oppskrift som alle kan vere med på å lage.
 
 ---
 
 ### 2. Kollektivet
 
 ```mermaid
-graph TD
+graph LR
     A[Start Økt] -->|Brukarnamn + Øktkode| B[Bli med i Eksisterande Økt]
     B --> C[Alle Legg til Ingrediensar]
     C -->|Pasta, Tomatar, Kvitløk, Ost| D[Avstemming]
@@ -115,14 +115,14 @@ graph TD
     F --> G[Alle Delar Pastaretten]
 ```
 
-**Beskrivelse**: Med få ingrediensar igjen bestemmer kollektivet seg for å lage noko saman. Etter avstemming vel dei alle ingrediensane, og MatMix lagar ei oppskrift på ein enkel pastarett.
+**Beskrivelse**: 🏘️ Med få ingrediensar igjen bestemmer kollektivet seg for å lage noko saman. 🗳️ Etter avstemming vel dei alle ingrediensane, og MatMix lagar ei oppskrift på ein enkel pastarett.
 
 ---
 
 ### 3. Matsvinn-entusiasten
 
 ```mermaid
-graph TD
+graph LR
     A[Start Økt] -->|Brukarnamn + Øktkode| B[Inviter Vener til Økt]
     B --> C[Alle Legg til Restar]
     C -->|Ris, Kyllingrestar, Løk, Krydder| D[AI Genererer Oppskrift]
@@ -130,7 +130,7 @@ graph TD
     E --> F[Lag Wok og Reduser Matsvinn]
 ```
 
-**Beskrivelse**: Ola inviterer vener til ei økt for å redusere matsvinn. Dei legg til restane dei har, og MatMix gir dei ei oppskrift på ein smakfull wok som nyttar alle ingrediensane utan at noko går til spille.
+**Beskrivelse**: 🌱 Ola inviterer vener til ei økt for å redusere matsvinn. ♻️ Dei legg til restane dei har, og MatMix gir dei ei oppskrift på ein smakfull wok som nyttar alle ingrediensane utan at noko går til spille.
 
 ---
 
