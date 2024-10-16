@@ -81,7 +81,6 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
   const [username, setUsername] = useState('')
   const [sessionCode, setSessionCode] = useState('')
   const [isCreatingSession, setIsCreatingSession] = useState(true)
-  const [isMuted, setIsMuted] = useState(false)
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value)
@@ -94,10 +93,6 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
 
   const handleToggleSessionMode = () => {
     setIsCreatingSession((prev) => !prev)
-  }
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted)
   }
 
   return (
@@ -192,6 +187,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
       orientation: 'landscape'
     },
     view: {
+      
       width: 1190, // A4 landscape width in points (doubled from 595)
       height: 842 // A4 height in points (unchanged)
     }
@@ -519,14 +515,6 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
             </div>
           </div>
 
-          <div className="fixed bottom-20 left-4 z-50 flex space-x-2">
-            <Button variant="outline" size="icon" onClick={toggleMute}>
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => setShowInfo(true)}>
-              <Info className="h-4 w-4" />
-            </Button>
-          </div>
           <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-100">
             <div className="w-full max-w-md mx-auto">
               <Button 
@@ -685,6 +673,45 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
           </Card>
         </div>
       )}
+
+      <div className="fixed bottom-4 left-4 z-50 flex space-x-2">
+        <Button variant="outline" size="icon" onClick={toggleMute}>
+          {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        </Button>
+        <Button variant="outline" size="icon" onClick={() => setShowInfo(true)}>
+          <Info className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <Dialog open={showSessionCode} onOpenChange={setShowSessionCode}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Del økt</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-center text-2xl font-bold">{sessionCode}</p>
+            <p className="text-center mt-2">Del denne koden med andre for å bli med i økta di.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showInfo} onOpenChange={setShowInfo}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Om MatMix</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>MatMix er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.</p>
+            <h3 className="font-semibold mt-4 mb-2">Slik bruker du MatMix:</h3>
+            <ol className="list-decimal list-inside">
+              <li>Legg til ingredienser du har tilgjengelig</li>
+              <li>Velg ingrediensene du vil bruke i oppskriften</li>
+              <li>Trykk på &quot;Bland!&quot; for å generere en unik oppskrift</li>
+              <li>Del oppskriften med vennene dine eller last den ned</li>
+            </ol>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
