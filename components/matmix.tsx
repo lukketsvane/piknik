@@ -169,7 +169,7 @@ export default function MatMix({ sessionCode: initialSessionCode }: { sessionCod
   }, [initialSessionCode])
 
   useEffect(() => {
-    backgroundAudioRef.current = new Audio('/music/Endless Stairs (Quadratic).mp3')
+    backgroundAudioRef.current = new Audio('/music/lobby-classic-game.mp3')
     backgroundAudioRef.current.loop = true
     generatingAudioRef.current = new Audio('/music/alt03-answer_010sec.mp3')
     generatingAudioRef.current.loop = true
