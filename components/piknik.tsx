@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { usePDF } from 'react-to-pdf'
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -18,25 +19,17 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 const client = new Anthropic({ apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY, dangerouslyAllowBrowser: true })
 
 type Kategori = 'Frukt' | 'Grønsaker' | 'Meieri' | 'Fisk' | 'Bakevarer' | 'Kjøt' | 'Anna'
 type Eining = 'dl' | 'g' | 'hg' | 'kg' | 'stk' | 'ss' | 'ts'
-type Ingrediens = { namn: string; mengde: number; eining: Eining; kategori: Kategori; bilde: string; brukar: { namn: string; farge: string } | null }
+type Ingrediens = { id?: string; namn: string; mengde: number; eining: Eining; kategori: Kategori; bilde: string; brukar: { id: string; namn: string; farge: string } | null }
 type Oppskrift = { tittel: string; skildring: string; ingrediensar: Ingrediens[]; steg: string[] }
-
-const alleIngredienser: Ingrediens[] = [
-  { namn: "Laks", mengde: 500, eining: "g", kategori: "Fisk", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Potet", mengde: 4, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Dill", mengde: 1, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Kylling", mengde: 400, eining: "g", kategori: "Kjøt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Ris", mengde: 2, eining: "dl", kategori: "Bakevarer", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Gulrot", mengde: 2, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Løk", mengde: 1, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Egg", mengde: 4, eining: "stk", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Melk", mengde: 5, eining: "dl", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-  { namn: "Eple", mengde: 3, eining: "stk", kategori: "Frukt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
-]
 
 const kategoriar: Kategori[] = ['Frukt', 'Grønsaker', 'Meieri', 'Fisk', 'Bakevarer', 'Kjøt', 'Anna']
 const einingar: Eining[] = ['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts']
@@ -80,8 +73,6 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
   )
 }
 
-const getRandomIngredients = (count: number): Ingrediens[] => alleIngredienser.sort(() => 0.5 - Math.random()).slice(0, count)
-
 export default function PikNik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
   const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>([])
@@ -95,8 +86,8 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
   const [sessionStarted, setSessionStarted] = useState(false)
   const [sessionCode, setSessionCode] = useState(initialSessionCode || '')
   const [showSessionCode, setShowSessionCode] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{ namn: string; farge: string } | null>(null)
-  const [participants, setParticipants] = useState<{ namn: string; farge: string }[]>([])
+  const [currentUser, setCurrentUser] = useState<{ id: string; namn: string; farge: string } | null>(null)
+  const [participants, setParticipants] = useState<{ id: string; namn: string; farge: string }[]>([])
   const [isMuted, setIsMuted] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -106,21 +97,55 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
   useEffect(() => {
     if (initialSessionCode) {
       setSessionStarted(true)
-      const username = `User${Math.floor(Math.random() * 1000)}`
-      const newUser = { namn: username, farge: userColors[0] }
-      setCurrentUser(newUser)
-      setParticipants([newUser])
-      setIngrediensar(getRandomIngredients(3))
+      setSessionCode(initialSessionCode)
+      joinSession(initialSessionCode)
     }
+    setupAudio()
+  }, [initialSessionCode])
+
+  useEffect(() => {
+    if (sessionStarted) {
+      const channel = supabase.channel(`room:${sessionCode}`)
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState()
+          const participants = Object.values(state).flat() as { id: string; namn: string; farge: string }[]
+          setParticipants(participants)
+        })
+        .on('broadcast', { event: 'ingredients_update' }, ({ payload }) => {
+          setIngrediensar(payload.ingredients)
+        })
+        .on('broadcast', { event: 'selected_ingredients_update' }, ({ payload }) => {
+          setValgteIngrediensar(payload.selectedIngredients)
+        })
+        .on('broadcast', { event: 'blending_update' }, ({ payload }) => {
+          setBlandar(payload.isBlending)
+        })
+        .on('broadcast', { event: 'recipe_update' }, ({ payload }) => {
+          setOppskrift(payload.recipe)
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED' && currentUser) {
+            await channel.track(currentUser)
+          }
+        })
+
+      return () => {
+        channel.unsubscribe()
+      }
+    }
+  }, [sessionStarted, sessionCode, currentUser])
+
+  const setupAudio = () => {
     backgroundAudioRef.current = new Audio('/music/lobby-classic-game.mp3')
     generatingAudioRef.current = new Audio('/music/alt03-answer_010sec.mp3')
     backgroundAudioRef.current.loop = true
     generatingAudioRef.current.loop = true
     return () => {
-      if (backgroundAudioRef.current) backgroundAudioRef.current.pause()
-      if (generatingAudioRef.current) generatingAudioRef.current.pause()
+      backgroundAudioRef.current?.pause()
+      generatingAudioRef.current?.pause()
     }
-  }, [initialSessionCode])
+  }
 
   useEffect(() => {
     const playAudio = async (audio: HTMLAudioElement) => {
@@ -142,58 +167,207 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
     }
   }, [isMuted, sessionStarted, blandar])
 
-  useEffect(() => {
-    const handleUserInteraction = () => {
-      if (backgroundAudioRef.current && !isMuted) {
-        backgroundAudioRef.current.play().catch(error => console.error("Error playing background audio:", error))
-      }
-      document.removeEventListener('click', handleUserInteraction)
-    }
-    document.addEventListener('click', handleUserInteraction)
-    return () => document.removeEventListener('click', handleUserInteraction)
-  }, [isMuted])
-
   const toggleMute = () => setIsMuted(!isMuted)
-  const generateSessionCode = () => Math.floor(1000 + Math.random() * 9000).toString()
 
-  const handleCreateSession = (username: string) => {
-    const code = generateSessionCode()
-    setSessionCode(code)
-    const newUser = { namn: username, farge: userColors[0] }
-    setCurrentUser(newUser)
-    setParticipants([newUser])
+  const joinSession = async (code: string) => {
+    const { data, error } = await supabase
+      .rpc('get_session_data', { p_session_code: code })
+
+    if (error) {
+      console.error('Error joining session:', error)
+      return
+    }
+
+    const sessionData = data[0]
+    setSessionCode(sessionData.session_code)
+    
+    const users = data.reduce((acc: any[], curr: any) => {
+      if  (curr.user_id && !acc.some((u: any) => u.id === curr.user_id)) {
+        acc.push({ id: curr.user_id, namn: curr.user_name, farge: curr.user_color })
+      }
+      return acc
+    }, [])
+    setParticipants(users)
+
+    const ingredients = data.reduce((acc: Ingrediens[], curr: any) => {
+      if (curr.ingredient_id) {
+        acc.push({
+          id: curr.ingredient_id,
+          namn: curr.ingredient_name,
+          mengde: curr.ingredient_amount,
+          eining: curr.ingredient_unit as Eining,
+          kategori: curr.ingredient_category as Kategori,
+          bilde: curr.ingredient_image,
+          brukar: users.find((u: any) => u.id === curr.ingredient_added_by)
+        })
+      }
+      return acc
+    }, [])
+    setIngrediensar(ingredients)
+
     setSessionStarted(true)
-    setIngrediensar(getRandomIngredients(3))
+  }
+
+  const handleCreateSession = async (username: string) => {
+    const code = Math.floor(1000 + Math.random() * 9000).toString()
+    const newUser = { namn: username, farge: userColors[0] }
+
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .insert({ code })
+      .select()
+      .single()
+
+    if (sessionError) {
+      console.error('Error creating session:', sessionError)
+      return
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({ session_id: sessionData.id, name: newUser.namn, color: newUser.farge })
+      .select()
+      .single()
+
+    if (userError) {
+      console.error('Error creating user:', userError)
+      return
+    }
+
+    setSessionCode(code)
+    setCurrentUser({ ...newUser, id: userData.id })
+    setParticipants([{ ...newUser, id: userData.id }])
+    setSessionStarted(true)
     router.push(`/${code}`)
   }
 
-  const handleJoinSession = (username: string, code: string) => {
-    if (participants.length < 6) {
-      const newUser = { namn: username, farge: userColors[participants.length] }
-      setCurrentUser(newUser)
-      setParticipants([...participants, newUser])
-      setSessionStarted(true)
-      router.push(`/${code}`)
-    } else {
-      alert('Økta er full')
+  const handleJoinSession = async (username: string, code: string) => {
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('code', code)
+      .single()
+
+    if (sessionError) {
+      console.error('Error finding session:', sessionError)
+      return
     }
+
+    const newUser = { namn: username, farge: userColors[participants.length % userColors.length] }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({ session_id: sessionData.id, name: newUser.namn, color: newUser.farge })
+      .select()
+      .single()
+
+    if (userError) {
+      console.error('Error creating user:', userError)
+      return
+    }
+
+    setCurrentUser({ ...newUser, id: userData.id })
+    setSessionStarted(true)
+    await joinSession(code)
+    router.push(`/${code}`)
   }
 
-  const handterLeggTilIngrediens = () => {
-    if (nyIngrediens.namn && nyIngrediens.mengde > 0 && nyIngrediens.eining && !ingrediensar.some(i => i.namn === nyIngrediens.namn)) {
-      setIngrediensar([...ingrediensar, { ...nyIngrediens, brukar: currentUser }])
+  const handterLeggTilIngrediens = async () => {
+    if (nyIngrediens.namn && nyIngrediens.mengde > 0 &&   nyIngrediens.eining && !ingrediensar.some(i => i.namn === nyIngrediens.namn)) {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('code', sessionCode)
+        .single()
+
+      if (sessionError) {
+        console.error('Error finding session:', sessionError)
+        return
+      }
+
+      const { data: ingredientData, error: ingredientError } = await supabase
+        .from('ingredients')
+        .insert({
+          session_id: sessionData.id,
+          name: nyIngrediens.namn,
+          amount: nyIngrediens.mengde,
+          unit: nyIngrediens.eining,
+          category: nyIngrediens.kategori,
+          image: nyIngrediens.bilde,
+          added_by: currentUser?.id
+        })
+        .select()
+        .single()
+
+      if (ingredientError) {
+        console.error('Error adding ingredient:', ingredientError)
+        return
+      }
+
+      const updatedIngredient = {
+        ...nyIngrediens,
+        id: ingredientData.id,
+        brukar: currentUser
+      }
+
+      const updatedIngredients = [...ingrediensar, updatedIngredient]
+      setIngrediensar(updatedIngredients)
       setNyIngrediens({ namn: "", mengde: 0, eining: "stk", kategori: "Anna", bilde: "/placeholder.svg?height=40&width=40", brukar: null })
       setVisLeggTilIngrediens(false)
+
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'ingredients_update',
+        payload: { ingredients: updatedIngredients }
+      })
     }
   }
 
-  const handterIngrediensMerking = (ingrediens: Ingrediens) => {
-    setValgteIngrediensar(prev => prev.some(i => i.namn === ingrediens.namn) ? prev.filter(i => i.namn !== ingrediens.namn) : [...prev, ingrediens])
+  const handterIngrediensMerking = async (ingrediens: Ingrediens) => {
+    const updatedSelectedIngredients = valgteIngrediensar.some(i => i.id === ingrediens.id)
+      ? valgteIngrediensar.filter(i => i.id !== ingrediens.id)
+      : [...valgteIngrediensar, ingrediens]
+    
+    setValgteIngrediensar(updatedSelectedIngredients)
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'selected_ingredients_update',
+      payload: { selectedIngredients: updatedSelectedIngredients }
+    })
   }
 
-  const handterSlettIngrediens = (ingrediens: Ingrediens) => {
-    setIngrediensar(prev => prev.filter(i => i.namn !== ingrediens.namn))
-    setValgteIngrediensar(prev => prev.filter(i => i.namn !== ingrediens.namn))
+  const handterSlettIngrediens = async (ingrediens: Ingrediens) => {
+    if (!ingrediens.id) {
+      console.error('Ingredient has no ID')
+      return
+    }
+
+    const { error } = await supabase
+      .from('ingredients')
+      .delete()
+      .eq('id', ingrediens.id)
+
+    if (error) {
+      console.error('Error deleting ingredient:', error)
+      return
+    }
+
+    const updatedIngredients = ingrediensar.filter(i => i.id !== ingrediens.id)
+    setIngrediensar(updatedIngredients)
+    setValgteIngrediensar(prev => prev.filter(i => i.id !== ingrediens.id))
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'ingredients_update',
+      payload: { ingredients: updatedIngredients }
+    })
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'selected_ingredients_update',
+      payload: { selectedIngredients: valgteIngrediensar.filter(i => i.id !== ingrediens.id) }
+    })
   }
 
   const handterRedigerIngrediens = (ingrediens: Ingrediens) => {
@@ -201,16 +375,61 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
     setVisLeggTilIngrediens(true)
   }
 
-  const handterOppdaterIngrediens = () => {
-    if (redigeringIngrediens) {
-      setIngrediensar(prev => prev.map(i => i.namn === redigeringIngrediens.namn ? { ...redigeringIngrediens, brukar: currentUser } : i))
+  const handterOppdaterIngrediens = async () => {
+    if (redigeringIngrediens && redigeringIngrediens.id) {
+      const { error } = await supabase
+        .from('ingredients')
+        .update({
+          name: redigeringIngrediens.namn,
+          amount: redigeringIngrediens.mengde,
+          unit: redigeringIngrediens.eining,
+          category: redigeringIngrediens.kategori,
+          image: redigeringIngrediens.bilde,
+          added_by: currentUser?.id
+        })
+        .eq('id', redigeringIngrediens.id)
+
+      if (error) {
+        console.error('Error updating ingredient:', error)
+        return
+      }
+
+      const updatedIngredients = ingrediensar.map(i => 
+        i.id === redigeringIngrediens.id ? { ...redigeringIngrediens, brukar: currentUser } : i
+      )
+      setIngrediensar(updatedIngredients)
       setRedigeringIngrediens(null)
       setVisLeggTilIngrediens(false)
+
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'ingredients_update',
+        payload: { ingredients: updatedIngredients }
+      })
+
+      // Update selected ingredients if the edited ingredient was selected
+      if (valgteIngrediensar.some(i => i.id === redigeringIngrediens.id)) {
+        const updatedSelectedIngredients = valgteIngrediensar.map(i =>
+          i.id === redigeringIngrediens.id ? { ...redigeringIngrediens, brukar: currentUser } : i
+        )
+        setValgteIngrediensar(updatedSelectedIngredients)
+        await supabase.channel(`room:${sessionCode}`).send({
+          type: 'broadcast',
+          event: 'selected_ingredients_update',
+          payload: { selectedIngredients: updatedSelectedIngredients }
+        })
+      }
     }
   }
 
-  const  genererOppskrift = async () => {
+  const genererOppskrift = async () => {
     setBlandar(true)
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'blending_update',
+      payload: { isBlending: true }
+    })
+
     const ingrediensListe = valgteIngrediensar.map(i => `${i.mengde} ${i.eining} ${i.namn}`).join(', ')
     try {
       const response = await client.messages.create({
@@ -234,12 +453,24 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
       const steg = lines.slice(stegStart + 1)
         .filter(line => /^\d+\./.test(line.trim()))
         .map(line => line.replace(/^\d+\.\s*/, '').trim())
-      setOppskrift({ tittel, skildring, ingrediensar, steg })
+      const newOppskrift = { tittel, skildring, ingrediensar, steg }
+      setOppskrift(newOppskrift)
+
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'recipe_update',
+        payload: { recipe: newOppskrift }
+      })
     } catch (error) {
       console.error('Feil ved generering av oppskrift:', error)
       alert('Det oppstod en feil ved generering av oppskrift. Vennligst prøv igjen.')
     } finally {
       setBlandar(false)
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'blending_update',
+        payload: { isBlending: false }
+      })
     }
   }
 
@@ -299,12 +530,12 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ingrediensar.map((ingrediens) => (
-                <div key={ingrediens.namn} className="flex items-center space-x-2">
-                  <Checkbox id={ingrediens.namn} checked={valgteIngrediensar.some(i => i.namn === ingrediens.namn)} onCheckedChange={() => handterIngrediensMerking(ingrediens)} className="sr-only" />
-                  <label htmlFor={ingrediens.namn} className={`flex items-center w-full p-2 rounded-lg shadow-sm transition-colors duration-200 ease-in-out cursor-pointer ${valgteIngrediensar.some(i => i.namn === ingrediens.namn) ? 'bg-purple-100 border-purple-500' : 'bg-white border-gray-200'} border relative`}>
+                <div key={ingrediens.id} className="flex items-center space-x-2">
+                  <Checkbox id={ingrediens.id} checked={valgteIngrediensar.some(i => i.id === ingrediens.id)} onCheckedChange={() => handterIngrediensMerking(ingrediens)} className="sr-only" />
+                  <label htmlFor={ingrediens.id} className={`flex items-center w-full p-2 rounded-lg shadow-sm transition-colors duration-200 ease-in-out cursor-pointer ${valgteIngrediensar.some(i => i.id === ingrediens.id) ? 'bg-purple-100 border-purple-500' : 'bg-white border-gray-200'} border relative`}>
                     {ingrediens.brukar && (
                       <div className={`absolute -top-1 -left-1 w-3 h-3 rounded-full flex items-center justify-center text-white text-[10px]`} style={{ backgroundColor: ingrediens.brukar.farge }}>
-                        {ingrediens.brukar.namn.split(' ').map(n => n[0]).join('')}
+                        {ingrediens.brukar.namn.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="w-8 h-8 mr-2 rounded-full bg-gray-200 flex items-center justify-center">
