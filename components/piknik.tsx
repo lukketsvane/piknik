@@ -73,7 +73,7 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
   )
 }
 
-export default function PikNik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
+export default function Component({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
   const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>([])
   const [valgteIngrediensar, setValgteIngrediensar] = useState<Ingrediens[]>([])
@@ -273,7 +273,7 @@ export default function PikNik({ sessionCode: initialSessionCode }: { sessionCod
   }
 
   const handterLeggTilIngrediens = async () => {
-    if (nyIngrediens.namn && nyIngrediens.mengde > 0 &&   nyIngrediens.eining && !ingrediensar.some(i => i.namn === nyIngrediens.namn)) {
+    if (nyIngrediens.namn && nyIngrediens.mengde > 0 &&   nyIngrediens.eining && !ingrediensar.some(i => i.namn ===    nyIngrediens.namn)) {
       const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
         .select('id')
