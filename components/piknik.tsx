@@ -6,11 +6,12 @@ import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Users, Volume2, VolumeX, Info, Trophy, Plus } from 'lucide-react'
-import { InitialCard } from './initial-card'
+import {InitialCard} from './initial-card'
 import { IngredientList } from './ingredient-list'
-import { RecipeModal } from './recipe-modal'
+import {RecipeModal} from './recipe-modal'
 import RecipeHistory from './recipe-history'
 import { AddIngredientDialog } from './add-ingredient-dialog'
+import { UserAvatar } from './user-avatar'
 import { useSession } from '@/hooks/use-session'
 import { useIngredients } from '@/hooks/use-ingredients'
 import { useRecipes } from '@/hooks/use-recipes'
@@ -69,7 +70,12 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
     }
   }, [sessionStarted, sessionCode, router, fetchRecipeHistory])
 
+  useEffect(() => {
+    console.log('Current recipe history:', recipeHistory)
+  }, [recipeHistory])
+
   if (!sessionStarted) return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
+
 
   return (
     <div className="w-full min-h-[calc(100vh-8rem)] bg-white flex flex-col items-center justify-center py-4 md:pt-12">
@@ -88,9 +94,7 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
             </div>
             <div className="flex space-x-2">
               {participants.map((participant, index) => (
-                <div key={index} className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: participant.farge }}>
-                  {participant.namn.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar key={participant.id} name={participant.namn} color={participant.farge} />
               ))}
             </div>
           </div>

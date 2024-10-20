@@ -1,86 +1,52 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronLeft } from 'lucide-react'
-import { createClient } from '@supabase/supabase-js'
+import { Button } from "@/components/ui/button"
 import { Oppskrift } from './piknik'
-import RecipeModal from './recipe-modal'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 interface RecipeHistoryProps {
   isOpen: boolean
   onClose: () => void
-  sessionCode: string
+  recipes: Oppskrift[]
+  onSelectRecipe: (recipe: Oppskrift) => void
 }
 
-export default function RecipeHistory({ isOpen, onClose, sessionCode }: RecipeHistoryProps) {
-  const [recipes, setRecipes] = useState<Oppskrift[]>([])
-  const [selectedRecipe, setSelectedRecipe] = useState<Oppskrift | null>(null)
-
+export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe }: RecipeHistoryProps) {
   useEffect(() => {
-    if (isOpen) {
-      fetchRecipes()
-    }
-  }, [isOpen, sessionCode])
-
-  const fetchRecipes = async () => {
-    const { data, error } = await supabase
-      .from('recipes')
-      .select('*')
-      .eq('session_code', sessionCode)
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-    if (error) {
-      console.error('Error fetching recipes:', error)
-    } else {
-      setRecipes(data)
-    }
-  }
-
-  const handleRecipeClick = (recipe: Oppskrift) => {
-    setSelectedRecipe(recipe)
-  }
-
-  const handleBackToList = () => {
-    setSelectedRecipe(null)
-  }
+    console.log('RecipeHistory rendered with recipes:', recipes)
+  }, [recipes])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>
-            {selectedRecipe ? (
-              <div className="flex items-center">
-                <Button variant="ghost" size="icon" onClick={handleBackToList} className="mr-2">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                {selectedRecipe.tittel}
-              </div>
-            ) : (
-              "Siste 50 oppskrifter"
-            )}
-          </DialogTitle>
+          <DialogTitle>Oppskrifthistorikk</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[60vh]">
-          {selectedRecipe ? (
-            <RecipeModal oppskrift={selectedRecipe} onClose={handleBackToList} />
+        <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+          {recipes.length === 0 ? (
+            <p className="text-center text-gray-500">Ingen oppskrifter ennå.</p>
           ) : (
-            <ul className="space-y-2">
-              {recipes.map((recipe) => (
-                <li key={recipe.id} className="cursor-pointer hover:bg-gray-100 p-2 rounded" onClick={() => handleRecipeClick(recipe)}>
-                  <h3 className="font-semibold">{recipe.tittel}</h3>
-                  <p className="text-sm text-gray-500">{new Date(recipe.dato).toLocaleDateString()}</p>
-                  <p className="text-sm">{recipe.ingrediensar.map(i => i.namn).join(', ').slice(0, 20)}...</p>
-                </li>
-              ))}
-            </ul>
+            recipes.map((recipe, index) => (
+              <div key={recipe.id || index} className="mb-4 p-3 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <h3 className="font-bold text-lg mb-1">{recipe.tittel}</h3>
+                <p className="text-sm text-gray-500 mb-2">{new Date(recipe.dato).toLocaleString('no-NO', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}</p>
+                <p className="text-sm text-gray-700 mb-3 line-clamp-2">{recipe.skildring}</p>
+                <Button 
+                  onClick={() => onSelectRecipe(recipe)} 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                >
+                  Vis oppskrift
+                </Button>
+              </div>
+            ))
           )}
         </ScrollArea>
       </DialogContent>

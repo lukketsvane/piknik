@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
-import { Oppskrift, Ingrediens } from '@/components/piknik'
+import { Oppskrift, Ingrediens, Eining } from '@/components/piknik'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,16 +18,32 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
   const fetchRecipeHistory = useCallback(async () => {
     if (!sessionCode) return
 
+    console.log('Fetching recipe history for session:', sessionCode)
+
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('code', sessionCode)
+      .single()
+
+    if (sessionError) {
+      console.error('Error fetching session:', sessionError)
+      return
+    }
+
+    console.log('Session data:', sessionData)
+
     const { data, error } = await supabase
       .from('recipes')
       .select('*')
-      .eq('session_id', sessionCode)
+      .eq('session_id', sessionData.id)
       .order('created_at', { ascending: false })
       .limit(50)
 
     if (error) {
       console.error('Error fetching recipe history:', error)
     } else {
+      console.log('Fetched recipes:', data)
       const formattedRecipes: Oppskrift[] = data.map((recipe: any) => ({
         id: recipe.id,
         tittel: recipe.title,
@@ -36,6 +52,7 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         steg: recipe.steps,
         dato: recipe.created_at
       }))
+      console.log('Formatted recipes:', formattedRecipes)
       setRecipeHistory(formattedRecipes)
     }
   }, [sessionCode])
@@ -92,10 +109,11 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         })
       const steg = lines.slice(stegStart + 1)
         .filter(line => /^\d+\./.test(line.trim()))
-        
         .map(line => line.replace(/^\d+\.\s*/, '').trim())
       const newOppskrift: Oppskrift = { tittel, skildring, ingrediensar, steg, dato: new Date().toISOString() }
       setOppskrift(newOppskrift)
+
+      console.log('New recipe generated:', newOppskrift)
 
       // Save the recipe to Supabase
       const { data: sessionData, error: sessionError } = await supabase
@@ -124,8 +142,13 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
       if (saveRecipeError) {
         console.error('Error saving recipe:', saveRecipeError)
       } else {
+        console.log('Recipe saved to database:', savedRecipe)
         newOppskrift.id = savedRecipe.id
-        setRecipeHistory(prevHistory => [newOppskrift, ...prevHistory].slice(0, 50))
+        setRecipeHistory(prevHistory => {
+          const updatedHistory = [newOppskrift, ...prevHistory].slice(0, 50)
+          console.log('Updated recipe history:', updatedHistory)
+          return updatedHistory
+        })
       }
 
       await supabase.channel(`room:${sessionCode}`).send({
