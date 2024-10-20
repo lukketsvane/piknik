@@ -36,6 +36,19 @@ const einingar: Eining[] = ['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts']
 const kategoriIkon = { Frukt: <Apple className="w-4 h-4" />, Grønsaker: <Carrot className="w-4 h-4" />, Meieri: <Milk className="w-4 h-4" />, Fisk: <Fish className="w-4 h-4" />, Bakevarer: <Utensils className="w-4 h-4" />, Kjøt: <Beef className="w-4 h-4" />, Anna: <Utensils className="w-4 h-4" /> }
 const userColors = ['#FFD700', '#FFB6C1', '#FF4500', '#9370DB', '#32CD32']
 
+const randomIngredients: Ingrediens[] = [
+  { namn: "Eple", mengde: 2, eining: "stk", kategori: "Frukt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Gulrot", mengde: 3, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Melk", mengde: 5, eining: "dl", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Laks", mengde: 400, eining: "g", kategori: "Fisk", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Brød", mengde: 1, eining: "stk", kategori: "Bakevarer", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Kylling", mengde: 500, eining: "g", kategori: "Kjøt", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Tomat", mengde: 4, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Ost", mengde: 200, eining: "g", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Egg", mengde: 6, eining: "stk", kategori: "Meieri", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+  { namn: "Løk", mengde: 2, eining: "stk", kategori: "Grønsaker", bilde: "/placeholder.svg?height=40&width=40", brukar: null },
+]
+
 const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (username: string, code: string) => void, onCreateSession: (username: string) => void }) => {
   const [username, setUsername] = useState('')
   const [sessionCode, setSessionCode] = useState('')
@@ -100,11 +113,11 @@ export default function Component({ sessionCode: initialSessionCode }: { session
       setSessionCode(initialSessionCode)
       joinSession(initialSessionCode)
     }
-    setupAudio()
   }, [initialSessionCode])
 
   useEffect(() => {
     if (sessionStarted) {
+      setupAudio()
       const channel = supabase.channel(`room:${sessionCode}`)
       channel
         .on('presence', { event: 'sync' }, () => {
@@ -132,18 +145,26 @@ export default function Component({ sessionCode: initialSessionCode }: { session
 
       return () => {
         channel.unsubscribe()
+        if (backgroundAudioRef.current) {
+          backgroundAudioRef.current.pause()
+          backgroundAudioRef.current = null
+        }
+        if (generatingAudioRef.current) {
+          generatingAudioRef.current.pause()
+          generatingAudioRef.current = null
+        }
       }
     }
   }, [sessionStarted, sessionCode, currentUser])
 
   const setupAudio = () => {
-    backgroundAudioRef.current = new Audio('/music/lobby-classic-game.mp3')
-    generatingAudioRef.current = new Audio('/music/alt03-answer_010sec.mp3')
-    backgroundAudioRef.current.loop = true
-    generatingAudioRef.current.loop = true
-    return () => {
-      backgroundAudioRef.current?.pause()
-      generatingAudioRef.current?.pause()
+    if (!backgroundAudioRef.current) {
+      backgroundAudioRef.current = new Audio('/music/going_places.mp3')
+      backgroundAudioRef.current.loop = true
+    }
+    if (!generatingAudioRef.current) {
+      generatingAudioRef.current = new Audio('/music/spanish_flea.mp3')
+      generatingAudioRef.current.loop = true
     }
   }
 
@@ -195,7 +216,7 @@ export default function Component({ sessionCode: initialSessionCode }: { session
           id: curr.ingredient_id,
           namn: curr.ingredient_name,
           mengde: curr.ingredient_amount,
-          eining: curr.ingredient_unit as Eining,
+          eining:  curr.ingredient_unit as Eining,
           kategori: curr.ingredient_category as Kategori,
           bilde: curr.ingredient_image,
           brukar: users.find((u: any) => u.id === curr.ingredient_added_by)
@@ -238,6 +259,26 @@ export default function Component({ sessionCode: initialSessionCode }: { session
     setCurrentUser({ ...newUser, id: userData.id })
     setParticipants([{ ...newUser, id: userData.id }])
     setSessionStarted(true)
+
+    // Add two random ingredients on session creation
+    const randomIngs = [...randomIngredients].sort(() => 0.5 - Math.random()).slice(0, 2)
+    const ingredientsToAdd = randomIngs.map(ing => ({
+      ...ing,
+      session_id: sessionData.id,
+      added_by: userData.id
+    }))
+
+    const { data: addedIngredients, error: addIngredientsError } = await supabase
+      .from('ingredients')
+      .insert(ingredientsToAdd)
+      .select()
+
+    if (addIngredientsError) {
+      console.error('Error adding initial ingredients:', addIngredientsError)
+    } else {
+      setIngrediensar(addedIngredients)
+    }
+
     router.push(`/${code}`)
   }
 
@@ -436,8 +477,27 @@ export default function Component({ sessionCode: initialSessionCode }: { session
         model: "claude-3-opus-20240229",
         max_tokens: 1000,
         temperature: 0.7,
-        messages: [{ role: "user", content: `Lag en kreativ oppskrift på norsk med BARE følgende ingredienser, og ikke bruk mer enn de oppgitte mengdene: ${ingrediensListe}. Formater svaret slik: Tittel: [Oppskriftens tittel] Beskrivelse: [Kort beskrivelse av retten] Ingredienser: - [mengde] [enhet] [ingrediens] Fremgangsmåte: 1. [Første steg] 2. [Andre steg] ... Vær kreativ, men bruk BARE de oppgitte ingrediensene og ikke overskrid mengdene. Hvis du ikke bruker hele mengden av en ingrediens, spesifiser det i oppskriften.`.replace(/"/g, '&quot;') }]
-      })
+          messages: [
+            {
+              role: "user",
+              content: `
+                Lag en kreativ oppskrift på norsk med BARE følgende ingredienser, og ikke bruk mer enn de oppgitte mengdene: ${ingrediensListe}.
+                Du kan velge å generere én av tre typer oppskrifter: "Rask", "Familievennlig", eller "Gourmet". Formater svaret slik:
+                Tittel: [Oppskriftens tittel]
+                Beskrivelse: [Kort beskrivelse av retten]
+                Oppskriftstype: [Velg mellom Rask, Familievennlig eller Gourmet]
+                Ingredienser:
+                - [mengde] [enhet] [ingrediens]
+                Fremgangsmåte:
+                1. [Første steg]
+                2. [Andre steg]
+                ...
+                Vær kreativ, men bruk BARE de oppgitte ingrediensene og ikke overskrid mengdene. Hvis du ikke bruker hele mengden av en ingrediens, spesifiser det i oppskriften.`.replace(/"/g, '&quot;')
+            }
+          ]
+        });
+      
+      
       const content = response.content[0].text
       const lines = content.split('\n')
       const tittel = lines[0].replace('Tittel: ', '').trim()
@@ -455,6 +515,32 @@ export default function Component({ sessionCode: initialSessionCode }: { session
         .map(line => line.replace(/^\d+\.\s*/, '').trim())
       const newOppskrift = { tittel, skildring, ingrediensar, steg }
       setOppskrift(newOppskrift)
+
+      // Save the recipe to Supabase
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('code', sessionCode)
+        .single()
+
+      if (sessionError) {
+        console.error('Error finding session:', sessionError)
+        return
+      }
+
+      const { error: saveRecipeError } = await supabase
+        .from('recipes')
+        .insert({
+          session_id: sessionData.id,
+          title: newOppskrift.tittel,
+          description: newOppskrift.skildring,
+          ingredients: newOppskrift.ingrediensar,
+          steps: newOppskrift.steg
+        })
+
+      if (saveRecipeError) {
+        console.error('Error saving recipe:', saveRecipeError)
+      }
 
       await supabase.channel(`room:${sessionCode}`).send({
         type: 'broadcast',
@@ -476,15 +562,10 @@ export default function Component({ sessionCode: initialSessionCode }: { session
 
   const handterBlanding = () => {
     setBlandar(true)
-    let indeks = 0
-    const intervallId = setInterval(() => {
-      setGjeldandeIngrediens(valgteIngrediensar[indeks].namn)
-      indeks = (indeks + 1) % valgteIngrediensar.length
-    }, 100)
-    setTimeout(() => {
-      clearInterval(intervallId)
-      genererOppskrift()
-    }, 3000)
+    if (generatingAudioRef.current) {
+      generatingAudioRef.current.play()
+    }
+    genererOppskrift()
   }
 
   if (!sessionStarted) return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
@@ -574,10 +655,8 @@ export default function Component({ sessionCode: initialSessionCode }: { session
       </div>
       {blandar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-32 h-32 flex items-center justify-center">
-            <div className="text-center animate-bounce">
-              {gjeldandeIngrediens}
-            </div>
+          <div className="bg-white p-8 rounded-lg shadow-lg w-64 h-64 flex items-center justify-center">
+            <Image src="/running.gif" alt="Loading" width={200} height={200} />
           </div>
         </div>
       )}
