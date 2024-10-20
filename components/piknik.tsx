@@ -44,7 +44,7 @@ const InitialCard = ({ onJoinSession, onCreateSession }: { onJoinSession: (usern
   return (
     <Card className="w-full max-w-md mx-auto mt-20 bg-white relative">
       <CardHeader className="flex flex-col items-center">
-        <Image src="/logo.png" alt="PikNik Logo" width={200} height={200} />
+        <Image src="/piknik-maskot.png" alt="PikNik Logo" width={200} height={200} />
         <CardTitle className="text-2xl font-bold text-center text-purple-600 mt-4">Velkomen til PikNik!</CardTitle>
         <p className="text-center mt-2">
           <span className="underline decoration-purple-500">Bland</span> ingredienser, 
