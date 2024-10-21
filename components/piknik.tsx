@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Users, Volume2, VolumeX, Info, Trophy, Plus, LogOut } from 'lucide-react'
+import { Users, Volume2, VolumeX, Info, Trophy, Plus, LogOut, Share2 } from 'lucide-react'
 import { InitialCard } from './initial-card'
 import { IngredientList } from './ingredient-list'
 import { RecipeModal } from './recipe-modal'
-import  RecipeHistory from './recipe-history'
+import { RecipeHistory } from './recipe-history'
 import { AddIngredientDialog } from './add-ingredient-dialog'
 import { UserAvatar } from './user-avatar'
 import { useSession } from '@/hooks/use-session'
@@ -18,6 +18,30 @@ import { useIngredients } from '@/hooks/use-ingredients'
 import { useRecipes } from '@/hooks/use-recipes'
 import { useAudio } from '@/hooks/use-audio'
 import { QRCodeSVG } from 'qrcode.react'
+
+export type Eining = 'g' | 'kg' | 'ml' | 'l' | 'stk' | 'ss' | 'ts'
+
+export type Kategori = 'Frukt' | 'Grønsaker' | 'Meieri' | 'Fisk' | 'Bakevarer' | 'Kjøt' | 'Anna'
+
+export interface Ingrediens {
+  id?: string
+  namn: string
+  mengde: number
+  eining: Eining
+  kategori: Kategori
+  bilde: string
+  brukar: { id: string; namn: string; farge: string } | null
+}
+
+export interface Oppskrift {
+  id?: string
+  tittel: string
+  skildring: string
+  ingrediensar: Ingrediens[]
+  steg: string[]
+  dato: string
+  sessionCode?: string
+}
 
 export default function Piknik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
@@ -90,6 +114,7 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
   const handleQuitSession = async () => {
     await handleStopSession()
     router.push('/')
+    setShowSessionCode(false)
   }
 
   if (!sessionStarted) {
@@ -109,9 +134,11 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
                 className="w-full p-2 border rounded"
               />
             </div>
-            <Button onClick={handleJoinWithUsername} disabled={!username} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
-              Bli med
-            </Button>
+            <DialogFooter>
+              <Button onClick={handleJoinWithUsername} disabled={!username} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
+                Bli med
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )
@@ -131,7 +158,7 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => setShowSessionCode(true)} className="bg-white hover:bg-white">
-                <Users className="w-4 h-4 mr-2" />
+                <Share2 className="w-4 h-4 mr-2" />
                 Del økt
               </Button>
               <h1 className="text-3xl font-bold text-purple-600">PikNik!</h1>
@@ -208,6 +235,11 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
               </a>
             </p>
           </div>
+          <DialogFooter>
+            <Button onClick={handleQuitSession} variant="destructive">
+              Avslutt økt
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={showInfo} onOpenChange={setShowInfo}>

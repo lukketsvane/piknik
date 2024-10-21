@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Oppskrift } from './piknik'
+import { Oppskrift, Ingrediens } from './piknik'
 import { ArrowLeft, ChevronRight } from 'lucide-react'
 
 interface RecipeHistoryProps {
@@ -12,7 +12,7 @@ interface RecipeHistoryProps {
   onSelectRecipe: (recipe: Oppskrift) => void
 }
 
-export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe }: RecipeHistoryProps) {
+export function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe }: RecipeHistoryProps) {
   const [selectedRecipe, setSelectedRecipe] = useState<Oppskrift | null>(null)
 
   useEffect(() => {
@@ -34,6 +34,10 @@ export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe
     }
   }
 
+  const formatIngredient = (ingrediens: Ingrediens) => {
+    return `${ingrediens.mengde} ${ingrediens.eining} ${ingrediens.namn}`
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -51,7 +55,7 @@ export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe
             )}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+        <ScrollArea  className="h-[400px] w-full rounded-md border p-4">
           {selectedRecipe ? (
             <div>
               <p className="text-sm text-gray-500 mb-2">
@@ -68,7 +72,7 @@ export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe
               <ul className="list-disc list-inside mb-4">
                 {selectedRecipe.ingrediensar.map((ingrediens, index) => (
                   <li key={index} className="text-sm">
-                    {ingrediens.mengde} {ingrediens.eining} {ingrediens.namn}
+                    {formatIngredient(ingrediens)}
                   </li>
                 ))}
               </ul>
