@@ -76,7 +76,7 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
       
       const response = await client.messages.create({
         model: "claude-3-opus-20240229",
-        max_tokens: 1000,
+        max_tokens: 1500,
         temperature: 0.7,
         messages: [
           {

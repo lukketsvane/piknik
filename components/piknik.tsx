@@ -6,6 +6,9 @@ import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Users, Volume2, VolumeX, Info, Trophy, Plus, LogOut, Share2 } from 'lucide-react'
 import { InitialCard } from './initial-card'
 import { IngredientList } from './ingredient-list'
@@ -43,6 +46,11 @@ export interface Oppskrift {
   sessionCode?: string
 }
 
+const cuisineOptions = [
+  'Norsk', 'Italiensk', 'Fransk', 'Spansk', 'Gresk', 'Tyrkisk', 'Indisk', 
+  'Kinesisk', 'Japansk', 'Thai', 'Vietnamesisk', 'Meksikansk', 'Amerikansk'
+]
+
 export default function Piknik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
   const [showSessionCode, setShowSessionCode] = useState(false)
@@ -50,6 +58,9 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
   const [showRecipeHistory, setShowRecipeHistory] = useState(false)
   const [showJoinDialog, setShowJoinDialog] = useState(false)
   const [username, setUsername] = useState('')
+  const [selectedCuisines, setSelectedCuisines] = useState<string[]>([])
+  const [isChildFriendly, setIsChildFriendly] = useState(false)
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false)
 
   const {
     sessionStarted,
@@ -81,7 +92,7 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
     handterBlanding,
     recipeHistory,
     fetchRecipeHistory
-  } = useRecipes(sessionCode, valgteIngrediensar)
+  } = useRecipes(sessionCode, valgteIngrediensar, selectedCuisines, isChildFriendly, isAdvancedMode)
 
   const { isMuted, toggleMute } = useAudio(sessionStarted, blandar)
 
@@ -115,6 +126,14 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
     await handleStopSession()
     router.push('/')
     setShowSessionCode(false)
+  }
+
+  const handleCuisineChange = (cuisine: string) => {
+    setSelectedCuisines(prev => 
+      prev.includes(cuisine)
+        ? prev.filter(c => c !== cuisine)
+        : [...prev, cuisine]
+    )
   }
 
   if (!sessionStarted) {
@@ -234,6 +253,43 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
                 {shareUrl}
               </a>
             </p>
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Velg kjøkken:</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {cuisineOptions.map((cuisine) => (
+                  <div key={cuisine} className="flex items-center">
+                    <Checkbox
+                      id={`cuisine-${cuisine}`}
+                      checked={selectedCuisines.includes(cuisine)}
+                      onCheckedChange={() => handleCuisineChange(cuisine)}
+                    />
+                    <Label htmlFor={`cuisine-${cuisine}`} className="ml-2">
+                      {cuisine}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <Label htmlFor="child-friendly" className="text-sm font-medium">
+                Barnevennlig oppskrift
+              </Label>
+              <Switch
+                id="child-friendly"
+                checked={isChildFriendly}
+                onCheckedChange={setIsChildFriendly}
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <Label htmlFor="advanced-mode" className="text-sm font-medium">
+                Avansert modus (inkluderer krydder)
+              </Label>
+              <Switch
+                id="advanced-mode"
+                checked={isAdvancedMode}
+                onCheckedChange={setIsAdvancedMode}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={handleQuitSession} variant="destructive">
@@ -248,7 +304,7 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
             <DialogTitle>Om PikNik</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>PikNik er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.</p>
+            <p>PikNik er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de  har.</p>
             <h3 className="font-semibold mt-4 mb-2">Slik bruker du PikNik:</h3>
             <ol className="list-decimal list-inside">
               <li>Legg til ingredienser du har tilgjengelig</li>
