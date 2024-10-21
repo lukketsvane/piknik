@@ -1,11 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { Oppskrift, Ingrediens, Eining } from '@/components/piknik'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase: SupabaseClient = createClient(
+  'https://apenpdwhwhcdfoksstsf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZW5wZHdod2hjZGZva3NzdHNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyOTE2MjUyNSwiZXhwIjoyMDQ0NzM4NTI1fQ.6azz4luS5CSBi6OGsyi_tw7NczajdvBRaUYZHqVJAY4',
+  {
+    db: {
+      schema: 'public'
+    },
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
 )
 
 const client = new Anthropic({ apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY, dangerouslyAllowBrowser: true })
@@ -14,35 +24,20 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
   const [oppskrift, setOppskrift] = useState<Oppskrift | null>(null)
   const [blandar, setBlandar] = useState(false)
   const [recipeHistory, setRecipeHistory] = useState<Oppskrift[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const fetchRecipeHistory = useCallback(async () => {
-    if (!sessionCode) return
+    console.log('Fetching recipe history for all sessions')
 
-    console.log('Fetching recipe history for session:', sessionCode)
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*, sessions(code)')
+        .order('created_at', { ascending: false })
+        .limit(50)
 
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('sessions')
-      .select('id')
-      .eq('code', sessionCode)
-      .single()
+      if (error) throw new Error(`Recipe fetch error: ${error.message}`)
 
-    if (sessionError) {
-      console.error('Error fetching session:', sessionError)
-      return
-    }
-
-    console.log('Session data:', sessionData)
-
-    const { data, error } = await supabase
-      .from('recipes')
-      .select('*')
-      .eq('session_id', sessionData.id)
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-    if (error) {
-      console.error('Error fetching recipe history:', error)
-    } else {
       console.log('Fetched recipes:', data)
       const formattedRecipes: Oppskrift[] = data.map((recipe: any) => ({
         id: recipe.id,
@@ -50,12 +45,16 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         skildring: recipe.description,
         ingrediensar: recipe.ingredients,
         steg: recipe.steps,
-        dato: recipe.created_at
+        dato: recipe.created_at,
+        sessionCode: recipe.sessions.code
       }))
       console.log('Formatted recipes:', formattedRecipes)
       setRecipeHistory(formattedRecipes)
+    } catch (error) {
+      console.error('Error fetching recipe history:', error)
+      setError('Kunne ikke hente oppskrifthistorikk. Vennligst prøv igjen senere.')
     }
-  }, [sessionCode])
+  }, [])
 
   useEffect(() => {
     fetchRecipeHistory()
@@ -63,14 +62,18 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
 
   const genererOppskrift = async () => {
     setBlandar(true)
-    await supabase.channel(`room:${sessionCode}`).send({
-      type: 'broadcast',
-      event: 'blending_update',
-      payload: { isBlending: true }
-    })
-
-    const ingrediensListe = valgteIngrediensar.map(i => `${i.mengde} ${i.eining} ${i.namn}`).join(', ')
+    setError(null)
     try {
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'blending_update',
+        payload: { isBlending: true }
+      })
+
+      const ingrediensListe = valgteIngrediensar.map(i => `${i.mengde} ${i.eining} ${i.namn}`).join(', ')
+      
+      console.log('Generating recipe with ingredients:', ingrediensListe)
+      
       const response = await client.messages.create({
         model: "claude-3-opus-20240229",
         max_tokens: 1000,
@@ -95,6 +98,8 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         ]
       })
       
+      console.log('Recipe generated successfully')
+      
       const content = response.content[0].text
       const lines = content.split('\n')
       const tittel = lines[0].replace('Tittel: ', '').trim()
@@ -104,13 +109,13 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
       const ingrediensar = lines.slice(ingrediensarStart + 1, stegStart)
         .filter(line => line.trim().startsWith('-'))
         .map(line => {
-          const [mengde, eining, ...namn] = line.replace('-', '').trim().split(' ')
-          return { namn: namn.join(' '), mengde: parseFloat(mengde), eining: eining as Eining, kategori: 'Anna', bilde: '/placeholder.svg?height=40&width=40', brukar: null }
+          const [mengde, eining, ...navn] = line.replace('-', '').trim().split(' ')
+          return { navn: navn.join(' '), mengde: parseFloat(mengde), eining: eining as Eining, kategori: 'Anna', bilde: '/placeholder.svg?height=40&width=40', brukar: null }
         })
       const steg = lines.slice(stegStart + 1)
         .filter(line => /^\d+\./.test(line.trim()))
         .map(line => line.replace(/^\d+\.\s*/, '').trim())
-      const newOppskrift: Oppskrift = { tittel, skildring, ingrediensar, steg, dato: new Date().toISOString() }
+      const newOppskrift: Oppskrift = { tittel, skildring, ingrediensar, steg, dato: new Date().toISOString(), sessionCode }
       setOppskrift(newOppskrift)
 
       console.log('New recipe generated:', newOppskrift)
@@ -122,10 +127,9 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         .eq('code', sessionCode)
         .single()
 
-      if (sessionError) {
-        console.error('Error finding session:', sessionError)
-        return
-      }
+      if (sessionError) throw new Error(`Session fetch error: ${sessionError.message}`)
+
+      if (!sessionData) throw new Error('No session data found')
 
       const { data: savedRecipe, error: saveRecipeError } = await supabase
         .from('recipes')
@@ -139,17 +143,17 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         .select()
         .single()
 
-      if (saveRecipeError) {
-        console.error('Error saving recipe:', saveRecipeError)
-      } else {
-        console.log('Recipe saved to database:', savedRecipe)
-        newOppskrift.id = savedRecipe.id
-        setRecipeHistory(prevHistory => {
-          const updatedHistory = [newOppskrift, ...prevHistory].slice(0, 50)
-          console.log('Updated recipe history:', updatedHistory)
-          return updatedHistory
-        })
-      }
+      if (saveRecipeError) throw new Error(`Recipe save error: ${saveRecipeError.message}`)
+
+      if (!savedRecipe) throw new Error('No saved recipe data returned')
+
+      console.log('Recipe saved to database:', savedRecipe)
+      newOppskrift.id = savedRecipe.id
+      setRecipeHistory(prevHistory => {
+        const updatedHistory = [newOppskrift, ...prevHistory].slice(0, 50)
+        console.log('Updated recipe history:', updatedHistory)
+        return updatedHistory
+      })
 
       await supabase.channel(`room:${sessionCode}`).send({
         type: 'broadcast',
@@ -157,8 +161,8 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
         payload: { recipe: newOppskrift }
       })
     } catch (error) {
-      console.error('Feil ved generering av oppskrift:', error)
-      alert('Det oppstod en feil ved generering av oppskrift. Vennligst prøv igjen.')
+      console.error('Feil ved generering eller lagring av oppskrift:', error)
+      setError(`Det oppstod en feil ved generering eller lagring av oppskrift: ${(error as Error).message}`)
     } finally {
       setBlandar(false)
       await supabase.channel(`room:${sessionCode}`).send({
@@ -181,6 +185,7 @@ export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]
     setBlandar,
     handterBlanding,
     recipeHistory,
-    fetchRecipeHistory
+    fetchRecipeHistory,
+    error
   }
 }

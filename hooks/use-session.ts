@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  'https://apenpdwhwhcdfoksstsf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZW5wZHdod2hjZGZva3NzdHNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyOTE2MjUyNSwiZXhwIjoyMDQ0NzM4NTI1fQ.6azz4luS5CSBi6OGsyi_tw7NczajdvBRaUYZHqVJAY4'
 )
 
 export type User = {

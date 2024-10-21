@@ -1,34 +1,31 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Users, Volume2, VolumeX, Info, Trophy, Plus } from 'lucide-react'
-import {InitialCard} from './initial-card'
+import { Input } from "@/components/ui/input"
+import { Users, Volume2, VolumeX, Info, Trophy, Plus, LogOut } from 'lucide-react'
+import { InitialCard } from './initial-card'
 import { IngredientList } from './ingredient-list'
-import {RecipeModal} from './recipe-modal'
-import RecipeHistory from './recipe-history'
+import { RecipeModal } from './recipe-modal'
+import  RecipeHistory from './recipe-history'
 import { AddIngredientDialog } from './add-ingredient-dialog'
 import { UserAvatar } from './user-avatar'
 import { useSession } from '@/hooks/use-session'
 import { useIngredients } from '@/hooks/use-ingredients'
 import { useRecipes } from '@/hooks/use-recipes'
 import { useAudio } from '@/hooks/use-audio'
-
-export type Kategori = 'Frukt' | 'Grønsaker' | 'Meieri' | 'Fisk' | 'Bakevarer' | 'Kjøt' | 'Anna'
-export type Eining = 'dl' | 'g' | 'hg' | 'kg' | 'stk' | 'ss' | 'ts'
-export type Ingrediens = { id?: string; namn: string; mengde: number; eining: Eining; kategori: Kategori; bilde: string; brukar: { id: string; namn: string; farge: string } | null }
-export type Oppskrift = { id?: string; tittel: string; skildring: string; ingrediensar: Ingrediens[]; steg: string[]; dato: string }
-
-export const userColors = ['#FFD700', '#FFB6C1', '#FF4500', '#9370DB', '#32CD32']
+import { QRCodeSVG } from 'qrcode.react'
 
 export default function Piknik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
   const router = useRouter()
   const [showSessionCode, setShowSessionCode] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const [showRecipeHistory, setShowRecipeHistory] = useState(false)
+  const [showJoinDialog, setShowJoinDialog] = useState(false)
+  const [username, setUsername] = useState('')
 
   const {
     sessionStarted,
@@ -36,7 +33,8 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
     currentUser,
     participants,
     handleCreateSession,
-    handleJoinSession
+    handleJoinSession,
+    handleStopSession
   } = useSession(initialSessionCode)
 
   const {
@@ -63,6 +61,14 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
 
   const { isMuted, toggleMute } = useAudio(sessionStarted, blandar)
 
+  const targetRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (initialSessionCode && !sessionStarted) {
+      setShowJoinDialog(true)
+    }
+  }, [initialSessionCode, sessionStarted])
+
   useEffect(() => {
     if (sessionStarted && sessionCode) {
       router.push(`/${sessionCode}`)
@@ -74,8 +80,46 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
     console.log('Current recipe history:', recipeHistory)
   }, [recipeHistory])
 
-  if (!sessionStarted) return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
+  const handleJoinWithUsername = async () => {
+    if (initialSessionCode && username) {
+      await handleJoinSession(username, initialSessionCode)
+      setShowJoinDialog(false)
+    }
+  }
 
+  const handleQuitSession = async () => {
+    await handleStopSession()
+    router.push('/')
+  }
+
+  if (!sessionStarted) {
+    if (showJoinDialog) {
+      return (
+        <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Bli med i økta</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <Input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Skriv inn brukernavnet ditt"
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <Button onClick={handleJoinWithUsername} disabled={!username} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
+              Bli med
+            </Button>
+          </DialogContent>
+        </Dialog>
+      )
+    }
+    return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
+  }
+
+  const shareUrl = `https://piknik.iverfinne.no/${sessionCode}`
 
   return (
     <div className="w-full min-h-[calc(100vh-8rem)] bg-white flex flex-col items-center justify-center py-4 md:pt-12">
@@ -93,14 +137,14 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
               <h1 className="text-3xl font-bold text-purple-600">PikNik!</h1>
             </div>
             <div className="flex space-x-2">
-              {participants.map((participant, index) => (
+              {participants.map((participant) => (
                 <UserAvatar key={participant.id} name={participant.namn} color={participant.farge} />
               ))}
             </div>
           </div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-purple-600">Ingrediensar</h2>
-            <Button onClick={() => setVisLeggTilIngrediens(true)} variant="outline" className="text-purple-500 border-purple-500 hover:bg-purple-50" size="icon">
+            <Button onClick={() => setVisLeggTilIngrediens(true)} variant="outline" className="text-purple-500 border-purple-500  hover:bg-purple-50" size="icon">
               <Plus className="w-4 h-4" />
             </Button>
           </div>
@@ -131,7 +175,7 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
         </div>
       )}
       {oppskrift && (
-        <RecipeModal oppskrift={oppskrift} onClose={() => setOppskrift(null)} />
+        <RecipeModal oppskrift={oppskrift} onClose={() => setOppskrift(null)} toPDF={() => {}} targetRef={targetRef} />
       )}
       <div className="fixed bottom-4 left-4 z-50 flex space-x-2">
         <Button variant="outline" size="icon" onClick={toggleMute}>
@@ -143,6 +187,9 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
         <Button variant="outline" size="icon" onClick={() => setShowRecipeHistory(true)}>
           <Trophy className="h-4 w-4" />
         </Button>
+        <Button variant="outline" size="icon" onClick={handleQuitSession}>
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
       <Dialog open={showSessionCode} onOpenChange={setShowSessionCode}>
         <DialogContent className="sm:max-w-[425px]">
@@ -152,6 +199,14 @@ export default function Piknik({ sessionCode: initialSessionCode }: { sessionCod
           <div className="py-4">
             <p className="text-center text-2xl font-bold">{sessionCode}</p>
             <p className="text-center mt-2">Del denne koden med andre for å bli med i økta di.</p>
+            <div className="mt-4 flex justify-center">
+              <QRCodeSVG value={shareUrl} size={200} />
+            </div>
+            <p className="text-center mt-4">
+              <a href={shareUrl} className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer">
+                {shareUrl}
+              </a>
+            </p>
           </div>
         </DialogContent>
       </Dialog>

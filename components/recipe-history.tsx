@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Oppskrift } from './piknik'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
 
 interface RecipeHistoryProps {
   isOpen: boolean
@@ -25,6 +25,13 @@ export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe
 
   const handleReturn = () => {
     setSelectedRecipe(null)
+  }
+
+  const handleUseRecipe = () => {
+    if (selectedRecipe) {
+      onSelectRecipe(selectedRecipe)
+      onClose()
+    }
   }
 
   return (
@@ -66,11 +73,12 @@ export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe
                 ))}
               </ul>
               <h4 className="font-semibold mb-2">Fremgangsmåte:</h4>
-              <ol className="list-decimal list-inside">
+              <ol className="list-decimal list-inside mb-4">
                 {selectedRecipe.steg.map((steg, index) => (
                   <li key={index} className="text-sm mb-2">{steg}</li>
                 ))}
               </ol>
+              <Button onClick={handleUseRecipe} className="w-full">Bruk denne oppskriften</Button>
             </div>
           ) : recipes.length === 0 ? (
             <p className="text-center text-gray-500">Ingen oppskrifter ennå.</p>
@@ -78,19 +86,22 @@ export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe
             recipes.map((recipe, index) => (
               <div 
                 key={recipe.id || index} 
-                className="mb-2 p-2 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="mb-2 p-2 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer flex justify-between items-center"
                 onClick={() => handleSelectRecipe(recipe)}
               >
-                <h3 className="font-semibold text-sm mb-1">{recipe.tittel}</h3>
-                <p className="text-xs text-gray-500">
-                  {new Date(recipe.dato).toLocaleString('no-NO', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </p>
+                <div>
+                  <h3 className="font-semibold text-sm mb-1">{recipe.tittel}</h3>
+                  <p className="text-xs text-gray-500">
+                    {new Date(recipe.dato).toLocaleString('no-NO', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
               </div>
             ))
           )}

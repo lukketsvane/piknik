@@ -1,0 +1,1532 @@
+File: app/[code]/page.tsx
+
+import PikNik from '@/components/piknik'
+
+export default function SessionPage({ params }: { params: { code: string } }) {
+  return <PikNik sessionCode={params.code} />
+}
+
+================================================================================
+
+File: app/layout.tsx
+
+import type { Metadata } from 'next'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: {
+    default: 'PikNik | Kreativ matlagingsapp',
+    template: '%s | PikNik'
+  },
+  description: 'PikNik er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.',
+  keywords: ['matlaging', 'oppskrifter', 'samarbeid', 'kreativ matlaging', 'matlagingsapp'],
+  authors: [{ name: 'PikNik Team' }],
+  creator: 'PikNik Team',
+  publisher: 'PikNik',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'nb_NO',
+    url: 'https://piknik.no',
+    title: 'PikNik | Kreativ matlagingsapp',
+    description: 'Samarbeid om kreative oppskrifter i sanntid med PikNik',
+    siteName: 'PikNik',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PikNik | Kreativ matlagingsapp',
+    description: 'Samarbeid om kreative oppskrifter i sanntid med PikNik',
+    creator: '@PikNikApp',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/site.webmanifest',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  verification: {
+    google: 'your-google-site-verification-code',
+    yandex: 'your-yandex-verification-code',
+    bing: 'your-bing-verification-code',
+  },
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="no" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
+    </html>
+  )
+}
+
+================================================================================
+
+File: app/page.tsx
+
+import React from 'react'
+import Miknik from '@/components/piknik'
+
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
+          <div className="p-4">
+            <Miknik />
+          </div>
+    </main>
+  )
+}
+
+================================================================================
+
+File: components/add-ingredient-dialog.tsx
+
+import React, { useState } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Kategori, Eining, Ingrediens } from './piknik'
+
+interface AddIngredientDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  onAddIngredient: (ingredient: Omit<Ingrediens, 'id' | 'brukar'>) => void
+}
+
+export function AddIngredientDialog({ isOpen, onClose, onAddIngredient }: AddIngredientDialogProps) {
+  const [namn, setNamn] = useState('')
+  const [mengde, setMengde] = useState('')
+  const [eining, setEining] = useState<Eining>('stk')
+  const [kategori, setKategori] = useState<Kategori>('Anna')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onAddIngredient({
+      namn,
+      mengde: parseFloat(mengde),
+      eining,
+      kategori,
+      bilde: '/placeholder.svg?height=40&width=40'
+    })
+    onClose()
+    resetForm()
+  }
+
+  const resetForm = () => {
+    setNamn('')
+    setMengde('')
+    setEining('stk')
+    setKategori('Anna')
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Legg til ingrediens</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            placeholder="Ingrediensnavn"
+            value={namn}
+            onChange={(e) => setNamn(e.target.value)}
+            required
+          />
+          <div className="flex space-x-2">
+            <Input
+              type="number"
+              placeholder="Mengde"
+              value={mengde}
+              onChange={(e) => setMengde(e.target.value)}
+              required
+              className="w-1/2"
+            />
+            <Select value={eining} onValueChange={(value: Eining) => setEining(value)}>
+              <SelectTrigger className="w-1/2">
+                <SelectValue placeholder="Velg enhet" />
+              </SelectTrigger>
+              <SelectContent>
+                {['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts'].map((unit) => (
+                  <SelectItem key={unit} value={unit}>
+                    {unit}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Select value={kategori} onValueChange={(value: Kategori) => setKategori(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Velg kategori" />
+            </SelectTrigger>
+            <SelectContent>
+              {['Frukt', 'Grønsaker', 'Meieri', 'Fisk', 'Bakevarer', 'Kjøt', 'Anna'].map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Avbryt
+            </Button>
+            <Button type="submit">Legg til</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+================================================================================
+
+File: components/ingredient-list.tsx
+
+import React from 'react'
+import { Button } from "@/components/ui/button"
+import { Pencil, Trash2 } from 'lucide-react'
+import { Ingrediens, Kategori } from '../piknik'
+
+interface IngredientListProps {
+  ingrediensar: Ingrediens[]
+  valgteIngrediensar: Ingrediens[]
+  onIngrediensMerking: (ingrediens: Ingrediens) => void
+  onRedigerIngrediens: (ingrediens: Ingrediens) => void
+  onSlettIngrediens: (ingrediens: Ingrediens) => void
+}
+
+const kategoriIkon: Record<Kategori, string> = {
+  Frukt: '🍎',
+  Grønsaker: '🥕',
+  Meieri: '🧀',
+  Fisk: '🐟',
+  Bakevarer: '🍞',
+  Kjøt: '🥩',
+  Anna: '🍽️'
+}
+
+export function IngredientList({ ingrediensar, valgteIngrediensar, onIngrediensMerking, onRedigerIngrediens, onSlettIngrediens }: IngredientListProps) {
+  return (
+    <ul className="space-y-2">
+      {ingrediensar.map((ingrediens) => {
+        const isSelected = valgteIngrediensar.some(i => i.id === ingrediens.id)
+        return (
+          <li
+            key={ingrediens.id}
+            className={`flex items-center p-2 rounded-lg shadow cursor-pointer transition-colors duration-200 ${
+              isSelected ? 'bg-purple-100 hover:bg-purple-200' : 'bg-white hover:bg-gray-100'
+            }`}
+            onClick={() => onIngrediensMerking(ingrediens)}
+          >
+            <div className="flex items-center flex-grow">
+              <div className="w-8 h-8 mr-2 rounded-full bg-gray-200 flex items-center justify-center">
+                {kategoriIkon[ingrediens.kategori as Kategori] || '🍽️'}
+              </div>
+              <div className="flex-grow">
+                <div className="font-medium text-sm">{ingrediens.namn}</div>
+                <div className="text-xs text-gray-500">{ingrediens.mengde} {ingrediens.eining}</div>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onRedigerIngrediens(ingrediens); }}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onSlettIngrediens(ingrediens); }}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+================================================================================
+
+File: components/initial-card.tsx
+
+import React, { useState } from 'react'
+import Image from 'next/image'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+
+interface InitialCardProps {
+  onJoinSession: (username: string, code: string) => void
+  onCreateSession: (username: string) => void
+}
+
+export const InitialCard: React.FC<InitialCardProps> = ({ onJoinSession, onCreateSession }) => {
+  const [username, setUsername] = useState('')
+  const [sessionCode, setSessionCode] = useState('')
+  const [isCreatingSession, setIsCreatingSession] = useState(true)
+
+  return (
+    <Card className="w-full max-w-md mx-auto mt-20 bg-white relative">
+      <CardHeader className="flex flex-col items-center">
+        <Image src="/piknik-maskot.png" alt="PikNik Logo" width={200} height={200} />
+        <CardTitle className="text-2xl font-bold text-center text-purple-600 mt-4">Velkomen til PikNik!</CardTitle>
+        <p className="text-center mt-2">
+          <span className="underline decoration-purple-500">Bland</span> ingredienser, 
+          <span className="underline decoration-green-500">skap</span> oppskrifter, 
+          <span className="underline decoration-blue-500">del</span> med venner!
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch id="session-mode" checked={isCreatingSession} onCheckedChange={() => setIsCreatingSession(prev => !prev)} />
+            <Label htmlFor="session-mode" className="text-lg font-medium text-purple-700">{isCreatingSession ? 'Lag økt' : 'Bli med i økt'}</Label>
+          </div>
+          <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Skriv inn brukarnamnet ditt" className="mt-1 bg-white" />
+          {!isCreatingSession && <Input id="sessionCode" value={sessionCode} onChange={(e) => setSessionCode(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="Skriv inn 4-sifra kode" className="mt-1 bg-white" maxLength={4} />}
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button onClick={() => isCreatingSession ? onCreateSession(username) : onJoinSession(username, sessionCode)} 
+                disabled={!username || (!isCreatingSession && sessionCode.length !== 4)}
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white">
+          {isCreatingSession ? 'Lag økt' : 'Bli med i økt'}
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
+
+================================================================================
+
+File: components/piknik.tsx
+
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Users, Volume2, VolumeX, Info, Trophy, Plus } from 'lucide-react'
+import { InitialCard } from './initial-card'
+import { IngredientList } from './ingredient-list'
+import { RecipeModal } from './recipe-modal'
+import  RecipeHistory from './recipe-history'
+import { AddIngredientDialog } from './add-ingredient-dialog'
+import { UserAvatar } from './user-avatar'
+import { useSession } from '@/hooks/use-session'
+import { useIngredients } from '@/hooks/use-ingredients'
+import { useRecipes } from '@/hooks/use-recipes'
+import { useAudio } from '@/hooks/use-audio'
+import QRCode from 'qrcode.react'
+
+export type Kategori = 'Frukt' | 'Grønsaker' | 'Meieri' | 'Fisk' | 'Bakevarer' | 'Kjøt' | 'Anna'
+export type Eining = 'dl' | 'g' | 'hg' | 'kg' | 'stk' | 'ss' | 'ts'
+export type Ingrediens = { id?: string; namn: string; mengde: number; eining: Eining; kategori: Kategori; bilde: string; brukar: { id: string; namn: string; farge: string } | null }
+export type Oppskrift = { id?: string; tittel: string; skildring: string; ingrediensar: Ingrediens[]; steg: string[]; dato: string }
+
+export const userColors = ['#FFD700', '#FFB6C1', '#FF4500', '#9370DB', '#32CD32']
+
+export default function Piknik({ sessionCode: initialSessionCode }: { sessionCode?: string }) {
+  const router = useRouter()
+  const [showSessionCode, setShowSessionCode] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
+  const [showRecipeHistory, setShowRecipeHistory] = useState(false)
+  const [showJoinDialog, setShowJoinDialog] = useState(!!initialSessionCode)
+  const [username, setUsername] = useState('')
+
+  const {
+    sessionStarted,
+    sessionCode,
+    currentUser,
+    participants,
+    handleCreateSession,
+    handleJoinSession
+  } = useSession(initialSessionCode)
+
+  const {
+    ingrediensar,
+    valgteIngrediensar,
+    handterIngrediensMerking,
+    handterLeggTilIngrediens,
+    handterRedigerIngrediens,
+    handterSlettIngrediens,
+    visLeggTilIngrediens,
+    setVisLeggTilIngrediens,
+    redigeringIngrediens
+  } = useIngredients(sessionCode, currentUser)
+
+  const {
+    oppskrift,
+    setOppskrift,
+    blandar,
+    setBlandar,
+    handterBlanding,
+    recipeHistory,
+    fetchRecipeHistory
+  } = useRecipes(sessionCode, valgteIngrediensar)
+
+  const { isMuted, toggleMute } = useAudio(sessionStarted, blandar)
+
+  const targetRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (sessionStarted && sessionCode) {
+      router.push(`/${sessionCode}`)
+      fetchRecipeHistory()
+    }
+  }, [sessionStarted, sessionCode, router, fetchRecipeHistory])
+
+  useEffect(() => {
+    console.log('Current recipe history:', recipeHistory)
+  }, [recipeHistory])
+
+  const handleJoinWithUsername = async () => {
+    if (initialSessionCode && username) {
+      await handleJoinSession(username, initialSessionCode)
+      setShowJoinDialog(false)
+    }
+  }
+
+  if (!sessionStarted) {
+    if (initialSessionCode) {
+      return (
+        <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Bli med i økta</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Skriv inn brukernavnet ditt"
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <Button onClick={handleJoinWithUsername} disabled={!username}>
+              Bli med
+            </Button>
+          </DialogContent>
+        </Dialog>
+      )
+    }
+    return <InitialCard onJoinSession={handleJoinSession} onCreateSession={handleCreateSession} />
+  }
+
+  const shareUrl = `${window.location.origin}/${sessionCode}`
+
+  return (
+    <div className="w-full min-h-[calc(100vh-8rem)] bg-white flex flex-col items-center justify-center py-4 md:pt-12">
+      <div className="w-full max-w-md mx-auto bg-white rounded-[40px] shadow-lg overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 10rem)' }}>
+        <div className="h-6 bg-gray-200 rounded-t-[40px] flex items-center justify-center">
+          <div className="w-16 h-4 bg-gray-300 rounded-full"></div>
+        </div>
+        <div className="px-4 py-6 flex-grow overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" onClick={() => setShowSessionCode(true)} className="bg-white hover:bg-white">
+                <Users className="w-4 h-4 mr-2" />
+                Del økt
+              </Button>
+              <h1 className="text-3xl font-bold text-purple-600">PikNik!</h1>
+            </div>
+            <div className="flex space-x-2">
+              {participants.map((participant) => (
+                <UserAvatar key={participant.id} name={participant.namn} color={participant.farge} />
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-purple-600">Ingrediensar</h2>
+            <Button onClick={() => setVisLeggTilIngrediens(true)} variant="outline" className="text-purple-500 border-purple-500  hover:bg-purple-50" size="icon">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <IngredientList
+            ingrediensar={ingrediensar}
+            valgteIngrediensar={valgteIngrediensar}
+            onIngrediensMerking={handterIngrediensMerking}
+            onRedigerIngrediens={handterRedigerIngrediens}
+            onSlettIngrediens={handterSlettIngrediens}
+          />
+        </div>
+        <div className="h-6 bg-gray-200 rounded-b-[40px] flex items-center justify-center">
+          <div className="w-32 h-4 bg-gray-300 rounded-full"></div>
+        </div>
+      </div>
+      <div className="fixed bottom-4 left-0 right-0 p-4 bg-white">
+        <div className="w-full max-w-md mx-auto">
+          <Button onClick={handterBlanding} disabled={valgteIngrediensar.length < 2 || blandar} className="w-full bg-purple-500 hover:bg-purple-600 text-white">
+            {blandar ? "Blandar..." : "Bland!"}
+          </Button>
+        </div>
+      </div>
+      {blandar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg shadow-lg w-64 h-64 flex items-center justify-center">
+            <Image src="/running.gif" alt="Loading" width={200} height={200} />
+          </div>
+        </div>
+      )}
+      {oppskrift && (
+        <RecipeModal oppskrift={oppskrift} onClose={() => setOppskrift(null)} toPDF={() => {}} targetRef={targetRef} />
+      )}
+      <div className="fixed bottom-4 left-4 z-50 flex space-x-2">
+        <Button variant="outline" size="icon" onClick={toggleMute}>
+          {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        </Button>
+        <Button variant="outline" size="icon" onClick={() => setShowInfo(true)}>
+          <Info className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon" onClick={() => setShowRecipeHistory(true)}>
+          <Trophy className="h-4 w-4" />
+        </Button>
+      </div>
+      <Dialog open={showSessionCode} onOpenChange={setShowSessionCode}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Del økt</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-center text-2xl font-bold">{sessionCode}</p>
+            <p className="text-center mt-2">Del denne koden med andre for å bli med i økta di.</p>
+            <div className="mt-4 flex justify-center">
+              <QRCode value={shareUrl} size={200} />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showInfo} onOpenChange={setShowInfo}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Om PikNik</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>PikNik er en interaktiv matlagingsapp der brukere kan samarbeide i sanntid for å lage kreative oppskrifter basert på ingrediensene de har.</p>
+            <h3 className="font-semibold mt-4 mb-2">Slik bruker du PikNik:</h3>
+            <ol className="list-decimal list-inside">
+              <li>Legg til ingredienser du har tilgjengelig</li>
+              <li>Velg ingrediensene du vil bruke i oppskriften</li>
+              <li>Trykk på "Bland!" for å generere en unik oppskrift</li>
+              <li>Del oppskriften med vennene dine eller last den ned</li>
+            </ol>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <RecipeHistory
+        isOpen={showRecipeHistory}
+        onClose={() => setShowRecipeHistory(false)}
+        recipes={recipeHistory}
+        onSelectRecipe={(recipe) => setOppskrift(recipe)}
+      />
+      <AddIngredientDialog
+        isOpen={visLeggTilIngrediens}
+        onClose={() => setVisLeggTilIngrediens(false)}
+        onAddIngredient={handterLeggTilIngrediens}
+        ingrediensToEdit={redigeringIngrediens}
+        onUpdateIngredient={handterRedigerIngrediens}
+      />
+    </div>
+  )
+}
+
+================================================================================
+
+File: components/recipe-history.tsx
+
+import React, { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { Oppskrift } from './piknik'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
+
+interface RecipeHistoryProps {
+  isOpen: boolean
+  onClose: () => void
+  recipes: Oppskrift[]
+  onSelectRecipe: (recipe: Oppskrift) => void
+}
+
+export default function RecipeHistory({ isOpen, onClose, recipes, onSelectRecipe }: RecipeHistoryProps) {
+  const [selectedRecipe, setSelectedRecipe] = useState<Oppskrift | null>(null)
+
+  useEffect(() => {
+    console.log('RecipeHistory rendered with recipes:', recipes)
+  }, [recipes])
+
+  const handleSelectRecipe = (recipe: Oppskrift) => {
+    setSelectedRecipe(recipe)
+  }
+
+  const handleReturn = () => {
+    setSelectedRecipe(null)
+  }
+
+  const handleUseRecipe = () => {
+    if (selectedRecipe) {
+      onSelectRecipe(selectedRecipe)
+      onClose()
+    }
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {selectedRecipe ? (
+              <div className="flex items-center">
+                <Button variant="ghost" size="sm" onClick={handleReturn} className="mr-2 p-0">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                {selectedRecipe.tittel}
+              </div>
+            ) : (
+              'Oppskrifthistorikk'
+            )}
+          </DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+          {selectedRecipe ? (
+            <div>
+              <p className="text-sm text-gray-500 mb-2">
+                {new Date(selectedRecipe.dato).toLocaleString('no-NO', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric', 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </p>
+              <p className="text-sm text-gray-700 mb-4">{selectedRecipe.skildring}</p>
+              <h4 className="font-semibold mb-2">Ingredienser:</h4>
+              <ul className="list-disc list-inside mb-4">
+                {selectedRecipe.ingrediensar.map((ingrediens, index) => (
+                  <li key={index} className="text-sm">
+                    {ingrediens.mengde} {ingrediens.eining} {ingrediens.namn}
+                  </li>
+                ))}
+              </ul>
+              <h4 className="font-semibold mb-2">Fremgangsmåte:</h4>
+              <ol className="list-decimal list-inside mb-4">
+                {selectedRecipe.steg.map((steg, index) => (
+                  <li key={index} className="text-sm mb-2">{steg}</li>
+                ))}
+              </ol>
+              <Button onClick={handleUseRecipe} className="w-full">Bruk denne oppskriften</Button>
+            </div>
+          ) : recipes.length === 0 ? (
+            <p className="text-center text-gray-500">Ingen oppskrifter ennå.</p>
+          ) : (
+            recipes.map((recipe, index) => (
+              <div 
+                key={recipe.id || index} 
+                className="mb-2 p-2 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer flex justify-between items-center"
+                onClick={() => handleSelectRecipe(recipe)}
+              >
+                <div>
+                  <h3 className="font-semibold text-sm mb-1">{recipe.tittel}</h3>
+                  <p className="text-xs text-gray-500">
+                    {new Date(recipe.dato).toLocaleString('no-NO', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </div>
+            ))
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+================================================================================
+
+File: components/recipe-modal.tsx
+
+import React from 'react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Download, X } from 'lucide-react'
+
+interface Ingrediens {
+  namn: string
+  mengde: number
+  eining: string
+}
+
+interface Oppskrift {
+  tittel: string
+  skildring: string
+  ingrediensar: Ingrediens[]
+  steg: string[]
+}
+
+interface RecipeModalProps {
+  oppskrift: Oppskrift
+  onClose: () => void
+  toPDF: () => void
+  targetRef: React.RefObject<HTMLDivElement>
+}
+
+export const RecipeModal: React.FC<RecipeModalProps> = ({ oppskrift, onClose, toPDF, targetRef }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <Card className="w-full max-w-md h-[90vh] flex flex-col bg-white">
+        <CardHeader className="flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <CardTitle className="pr-8 truncate">{oppskrift.tittel}</CardTitle>
+            <div className="flex space-x-2 flex-shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => setTimeout(() => toPDF(), 100)}>
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <ScrollArea className="flex-grow">
+          <CardContent ref={targetRef} className="p-6 max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">{oppskrift.tittel}</h2>
+            <p className="mb-6">{oppskrift.skildring}</p>
+            <h3 className="text-xl font-semibold mb-2">Ingrediensar</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ingrediens</TableHead>
+                  <TableHead>Mengde</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {oppskrift.ingrediensar.map((ing, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{ing.namn}</TableCell>
+                    <TableCell>{ing.mengde} {ing.eining}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <h3 className="text-xl font-semibold mt-6 mb-2">Framgangsmåte</h3>
+            <ol className="list-decimal list-inside">
+              {oppskrift.steg.map((steg, index) => (
+                <li key={index} className="mb-2">{steg}</li>
+              ))}
+            </ol>
+          </CardContent>
+        </ScrollArea>
+      </Card>
+    </div>
+  )
+}
+
+================================================================================
+
+File: components/user-avatar.tsx
+
+import React from 'react'
+
+interface UserAvatarProps {
+  name: string
+  color: string
+}
+
+export function UserAvatar({ name, color }: UserAvatarProps) {
+  return (
+    <div 
+      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+      style={{ backgroundColor: color }}
+    >
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )
+}
+
+================================================================================
+
+File: hooks/use-audio.ts
+
+import { useState, useEffect, useRef } from 'react'
+
+export function useAudio(sessionStarted: boolean, blandar: boolean) {
+  const [isMuted, setIsMuted] = useState(false)
+  const backgroundAudioRef = useRef<HTMLAudioElement | null>(null)
+  const blendingAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      backgroundAudioRef.current = new Audio('/music/going_places.mp3')
+      backgroundAudioRef.current.loop = true
+      blendingAudioRef.current = new Audio('/music/spanish_flea.mp3')
+    }
+
+    return () => {
+      if (backgroundAudioRef.current) {
+        backgroundAudioRef.current.pause()
+        backgroundAudioRef.current = null
+      }
+      if (blendingAudioRef.current) {
+        blendingAudioRef.current.pause()
+        blendingAudioRef.current = null
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (sessionStarted && backgroundAudioRef.current) {
+      if (!isMuted) {
+        backgroundAudioRef.current.play().catch(error => console.error('Error playing background audio:', error))
+      } else {
+        backgroundAudioRef.current.pause()
+      }
+    }
+  }, [sessionStarted, isMuted])
+
+  useEffect(() => {
+    if (blandar && blendingAudioRef.current) {
+      if (!isMuted) {
+        blendingAudioRef.current.play().catch(error => console.error('Error playing blending audio:', error))
+      } else {
+        blendingAudioRef.current.pause()
+      }
+    } else if (blendingAudioRef.current) {
+      blendingAudioRef.current.pause()
+      blendingAudioRef.current.currentTime = 0
+    }
+  }, [blandar, isMuted])
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted)
+    if (backgroundAudioRef.current) {
+      if (isMuted) {
+        backgroundAudioRef.current.play().catch(error => console.error('Error playing background audio:', error))
+      } else {
+        backgroundAudioRef.current.pause()
+      }
+    }
+    if (blendingAudioRef.current) {
+      if (isMuted) {
+        if (blandar) {
+          blendingAudioRef.current.play().catch(error => console.error('Error playing blending audio:', error))
+        }
+      } else {
+        blendingAudioRef.current.pause()
+      }
+    }
+  }
+
+  return { isMuted, toggleMute }
+}
+
+================================================================================
+
+File: hooks/use-ingredients.ts
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
+import { Ingrediens, Kategori, Eining } from '../piknik'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+const randomIngredients: Ingrediens[] = [
+  { namn: 'Eple', mengde: 2, eining: 'stk', kategori: 'Frukt', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Gulrot', mengde: 3, eining: 'stk', kategori: 'Grønsaker', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Melk', mengde: 1, eining: 'l', kategori: 'Meieri', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Laks', mengde: 400, eining: 'g', kategori: 'Fisk', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Brød', mengde: 1, eining: 'stk', kategori: 'Bakevarer', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Kylling', mengde: 500, eining: 'g', kategori: 'Kjøt', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Ost', mengde: 200, eining: 'g', kategori: 'Meieri', bilde: '/placeholder.svg?height=40&width=40' },
+  { namn: 'Tomat', mengde: 4, eining: 'stk', kategori: 'Grønsaker', bilde: '/placeholder.svg?height=40&width=40' },
+]
+
+export function useIngredients(sessionCode: string, currentUser: { id: string; namn: string; farge: string } | null) {
+  const [ingrediensar, setIngrediensar] = useState<Ingrediens[]>([])
+  const [valgteIngrediensar, setValgteIngrediensar] = useState<Ingrediens[]>([])
+  const [visLeggTilIngrediens, setVisLeggTilIngrediens] = useState(false)
+  const [redigeringIngrediens, setRedigeringIngrediens] = useState<Ingrediens | null>(null)
+
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('code', sessionCode)
+        .single()
+
+      if (sessionError) {
+        console.error('Error finding session:', sessionError)
+        return
+      }
+
+      const { data: ingredientsData, error: ingredientsError } = await supabase
+        .from('ingredients')
+        .select('*')
+        .eq('session_id', sessionData.id)
+
+      if (ingredientsError) {
+        console.error('Error fetching ingredients:', ingredientsError)
+        return
+      }
+
+      if (ingredientsData.length === 0) {
+        await addRandomIngredients(sessionData.id)
+      } else {
+        setIngrediensar(ingredientsData.map(mapIngredientFromDB))
+      }
+    }
+
+    fetchIngredients()
+
+    const channel = supabase.channel(`room:${sessionCode}`)
+    channel
+      .on('broadcast', { event: 'ingredients_update' }, ({ payload }) => {
+        setIngrediensar(payload.ingredients)
+      })
+      .on('broadcast', { event: 'selected_ingredients_update' }, ({ payload }) => {
+        setValgteIngrediensar(payload.selectedIngredients)
+      })
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [sessionCode])
+
+  const addRandomIngredients = async (sessionId: string) => {
+    const shuffled = randomIngredients.sort(() => 0.5 - Math.random())
+    const selected = shuffled.slice(0, 2)
+
+    const ingredientsToAdd = selected.map(ingredient => ({
+      session_id: sessionId,
+      name: ingredient.namn,
+      amount: ingredient.mengde,
+      unit: ingredient.eining,
+      category: ingredient.kategori,
+      image: ingredient.bilde,
+      added_by: currentUser?.id
+    }))
+
+    const { data: addedIngredients, error } = await supabase
+      .from('ingredients')
+      .insert(ingredientsToAdd)
+      .select()
+
+    if (error) {
+      console.error('Error adding random ingredients:', error)
+      return
+    }
+
+    const mappedIngredients = addedIngredients.map(mapIngredientFromDB)
+    setIngrediensar(mappedIngredients)
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'ingredients_update',
+      payload: { ingredients: mappedIngredients }
+    })
+  }
+
+  const mapIngredientFromDB = (dbIngredient: any): Ingrediens => ({
+    id: dbIngredient.id,
+    namn: dbIngredient.name,
+    mengde: dbIngredient.amount,
+    eining: dbIngredient.unit as Eining,
+    kategori: dbIngredient.category as Kategori,
+    bilde: dbIngredient.image,
+    brukar: dbIngredient.added_by ? { id: dbIngredient.added_by, namn: '', farge: '' } : null
+  })
+
+  const handterLeggTilIngrediens = async (nyIngrediens: Ingrediens) => {
+    if (nyIngrediens.namn && nyIngrediens.mengde > 0 && nyIngrediens.eining && !ingrediensar.some(i => i.namn === nyIngrediens.namn)) {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('code', sessionCode)
+        .single()
+
+      if (sessionError) {
+        console.error('Error finding session:', sessionError)
+        return
+      }
+
+      const { data: ingredientData, error: ingredientError } = await supabase
+        .from('ingredients')
+        .insert({
+          session_id: sessionData.id,
+          name: nyIngrediens.namn,
+          amount: nyIngrediens.mengde,
+          unit: nyIngrediens.eining,
+          category: nyIngrediens.kategori,
+          image: nyIngrediens.bilde,
+          added_by: currentUser?.id
+        })
+        .select()
+        .single()
+
+      if (ingredientError) {
+        console.error('Error adding ingredient:', ingredientError)
+        return
+      }
+
+      const updatedIngredient = mapIngredientFromDB(ingredientData)
+      const updatedIngredients = [...ingrediensar, updatedIngredient]
+      setIngrediensar(updatedIngredients)
+      setVisLeggTilIngrediens(false)
+
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'ingredients_update',
+        payload: { ingredients: updatedIngredients }
+      })
+    }
+  }
+
+  const handterIngrediensMerking = async (ingrediens: Ingrediens) => {
+    const updatedSelectedIngredients = valgteIngrediensar.some(i => i.id === ingrediens.id)
+      ? valgteIngrediensar.filter(i => i.id !== ingrediens.id)
+      : [...valgteIngrediensar, ingrediens]
+    
+    setValgteIngrediensar(updatedSelectedIngredients)
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'selected_ingredients_update',
+      payload: { selectedIngredients: updatedSelectedIngredients }
+    })
+  }
+
+  const handterSlettIngrediens = async (ingrediens: Ingrediens) => {
+    if (!ingrediens.id) {
+      console.error('Ingredient has no ID')
+      return
+    }
+
+    const { error } = await supabase
+      .from('ingredients')
+      .delete()
+      .eq('id', ingrediens.id)
+
+    if (error) {
+      console.error('Error deleting ingredient:', error)
+      return
+    }
+
+    const updatedIngredients = ingrediensar.filter(i => i.id !== ingrediens.id)
+    setIngrediensar(updatedIngredients)
+    setValgteIngrediensar(prev => prev.filter(i => i.id !== ingrediens.id))
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'ingredients_update',
+      payload: { ingredients: updatedIngredients }
+    })
+
+    await supabase.channel(`room:${sessionCode}`).send({
+      type: 'broadcast',
+      event: 'selected_ingredients_update',
+      payload: { selectedIngredients: valgteIngrediensar.filter(i => i.id !== ingrediens.id) }
+    })
+  }
+
+  const handterRedigerIngrediens = (ingrediens: Ingrediens) => {
+    setRedigeringIngrediens(ingrediens)
+    setVisLeggTilIngrediens(true)
+  }
+
+  const handterOppdaterIngrediens = async (oppdatertIngrediens: Ingrediens) => {
+    if (oppdatertIngrediens.id) {
+      const { error } = await supabase
+        .from('ingredients')
+        .update({
+          name: oppdatertIngrediens.namn,
+          amount: oppdatertIngrediens.mengde,
+          unit: oppdatertIngrediens.eining,
+          category: oppdatertIngrediens.kategori,
+          image: oppdatertIngrediens.bilde,
+          added_by: currentUser?.id
+        })
+        .eq('id', oppdatertIngrediens.id)
+
+      if (error) {
+        console.error('Error updating ingredient:', error)
+        return
+      }
+
+      const updatedIngredients = ingrediensar.map(i => 
+        i.id === oppdatertIngrediens.id ? { ...oppdatertIngrediens, brukar: currentUser } : i
+      )
+      setIngrediensar(updatedIngredients)
+      setRedigeringIngrediens(null)
+      setVisLeggTilIngrediens(false)
+
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'ingredients_update',
+        payload: { ingredients: updatedIngredients }
+      })
+
+      if (valgteIngrediensar.some(i => i.id === oppdatertIngrediens.id)) {
+        const updatedSelectedIngredients = valgteIngrediensar.map(i =>
+          i.id === oppdatertIngrediens.id ? { ...oppdatertIngrediens, brukar: currentUser } : i
+        )
+        setValgteIngrediensar(updatedSelectedIngredients)
+        await supabase.channel(`room:${sessionCode}`).send({
+          type: 'broadcast',
+          event: 'selected_ingredients_update',
+          payload: { selectedIngredients: updatedSelectedIngredients }
+        })
+      }
+    }
+  }
+
+  return {
+    ingrediensar,
+    valgteIngrediensar,
+    visLeggTilIngrediens,
+    setVisLeggTilIngrediens,
+    redigeringIngrediens,
+    handterLeggTilIngrediens,
+    handterIngrediensMerking,
+    handterSlettIngrediens,
+    handterRedigerIngrediens,
+    handterOppdaterIngrediens
+  }
+}
+
+================================================================================
+
+File: hooks/use-recipes.ts
+
+import { useState, useEffect, useCallback } from 'react'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import Anthropic from '@anthropic-ai/sdk'
+import { Oppskrift, Ingrediens, Eining } from '@/components/piknik'
+
+const supabase: SupabaseClient = createClient(
+  'https://apenpdwhwhcdfoksstsf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZW5wZHdod2hjZGZva3NzdHNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyOTE2MjUyNSwiZXhwIjoyMDQ0NzM4NTI1fQ.6azz4luS5CSBi6OGsyi_tw7NczajdvBRaUYZHqVJAY4',
+  {
+    db: {
+      schema: 'public'
+    },
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    }
+  }
+)
+
+const client = new Anthropic({ apiKey: process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY, dangerouslyAllowBrowser: true })
+
+export function useRecipes(sessionCode: string, valgteIngrediensar: Ingrediens[]) {
+  const [oppskrift, setOppskrift] = useState<Oppskrift | null>(null)
+  const [blandar, setBlandar] = useState(false)
+  const [recipeHistory, setRecipeHistory] = useState<Oppskrift[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchRecipeHistory = useCallback(async () => {
+    if (!sessionCode) return
+
+    console.log('Fetching recipe history for session:', sessionCode)
+
+    try {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('code', sessionCode)
+        .single()
+
+      if (sessionError) throw new Error(`Session error: ${sessionError.message}`)
+
+      if (!sessionData) throw new Error('No session data found')
+
+      console.log('Session data:', sessionData)
+
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('session_id', sessionData.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (error) throw new Error(`Recipe fetch error: ${error.message}`)
+
+      console.log('Fetched recipes:', data)
+      const formattedRecipes: Oppskrift[] = data.map((recipe: any) => ({
+        id: recipe.id,
+        tittel: recipe.title,
+        skildring: recipe.description,
+        ingrediensar: recipe.ingredients,
+        steg: recipe.steps,
+        dato: recipe.created_at
+      }))
+      console.log('Formatted recipes:', formattedRecipes)
+      setRecipeHistory(formattedRecipes)
+    } catch (error) {
+      console.error('Error fetching recipe history:', error)
+      setError('Kunne ikke hente oppskrifthistorikk. Vennligst prøv igjen senere.')
+    }
+  }, [sessionCode])
+
+  useEffect(() => {
+    fetchRecipeHistory()
+  }, [fetchRecipeHistory])
+
+  const genererOppskrift = async () => {
+    setBlandar(true)
+    setError(null)
+    try {
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'blending_update',
+        payload: { isBlending: true }
+      })
+
+      const ingrediensListe = valgteIngrediensar.map(i => `${i.mengde} ${i.eining} ${i.namn}`).join(', ')
+      
+      console.log('Generating recipe with ingredients:', ingrediensListe)
+      
+      const response = await client.messages.create({
+        model: "claude-3-opus-20240229",
+        max_tokens: 1000,
+        temperature: 0.7,
+        messages: [
+          {
+            role: "user",
+            content: `
+              Lag en kreativ oppskrift på norsk med BARE følgende ingredienser, og ikke bruk mer enn de oppgitte mengdene: ${ingrediensListe}.
+              Du kan velge å generere én av tre typer oppskrifter: "Rask", "Familievennlig", eller "Gourmet". Formater svaret slik:
+              Tittel: [Oppskriftens tittel]
+              Beskrivelse: [Kort beskrivelse av retten]
+              Oppskriftstype: [Velg mellom Rask, Familievennlig eller Gourmet]
+              Ingredienser:
+              - [mengde] [enhet] [ingrediens]
+              Fremgangsmåte:
+              1. [Første steg]
+              2. [Andre steg]
+              ...
+              Vær kreativ, men bruk BARE de oppgitte ingrediensene og ikke overskrid mengdene. Hvis du ikke bruker hele mengden av en ingrediens, spesifiser det i oppskriften.`.replace(/"/g, '&quot;')
+          }
+        ]
+      })
+      
+      console.log('Recipe generated successfully')
+      
+      const content = response.content[0].text
+      const lines = content.split('\n')
+      const tittel = lines[0].replace('Tittel: ', '').trim()
+      const skildring = lines[2].replace('Beskrivelse: ', '').trim()
+      const ingrediensarStart = lines.findIndex(line => line.includes('Ingredienser:'))
+      const stegStart = lines.findIndex(line => line.includes('Fremgangsmåte:'))
+      const ingrediensar = lines.slice(ingrediensarStart + 1, stegStart)
+        .filter(line => line.trim().startsWith('-'))
+        .map(line => {
+          const [mengde, eining, ...navn] = line.replace('-', '').trim().split(' ')
+          return { navn: navn.join(' '), mengde: parseFloat(mengde), eining: eining as Eining, kategori: 'Anna', bilde: '/placeholder.svg?height=40&width=40', brukar: null }
+        })
+      const steg = lines.slice(stegStart + 1)
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+      const newOppskrift: Oppskrift = { tittel, skildring, ingrediensar, steg, dato: new Date().toISOString() }
+      setOppskrift(newOppskrift)
+
+      console.log('New recipe generated:', newOppskrift)
+
+      // Save the recipe to Supabase
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('sessions')
+        .select('id')
+        .eq('code', sessionCode)
+        .single()
+
+      if (sessionError) throw new Error(`Session fetch error: ${sessionError.message}`)
+
+      if (!sessionData) throw new Error('No session data found')
+
+      const { data: savedRecipe, error: saveRecipeError } = await supabase
+        .from('recipes')
+        .insert({
+          session_id: sessionData.id,
+          title: newOppskrift.tittel,
+          description: newOppskrift.skildring,
+          ingredients: newOppskrift.ingrediensar,
+          steps: newOppskrift.steg
+        })
+        .select()
+        .single()
+
+      if (saveRecipeError) throw new Error(`Recipe save error: ${saveRecipeError.message}`)
+
+      if (!savedRecipe) throw new Error('No saved recipe data returned')
+
+      console.log('Recipe saved to database:', savedRecipe)
+      newOppskrift.id = savedRecipe.id
+      setRecipeHistory(prevHistory => {
+        const updatedHistory = [newOppskrift, ...prevHistory].slice(0, 50)
+        console.log('Updated recipe history:', updatedHistory)
+        return updatedHistory
+      })
+
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'recipe_update',
+        payload: { recipe: newOppskrift }
+      })
+    } catch (error) {
+      console.error('Feil ved generering eller lagring av oppskrift:', error)
+      setError(`Det oppstod en feil ved generering eller lagring av oppskrift: ${(error as Error).message}`)
+    } finally {
+      setBlandar(false)
+      await supabase.channel(`room:${sessionCode}`).send({
+        type: 'broadcast',
+        event: 'blending_update',
+        payload: { isBlending: false }
+      })
+    }
+  }
+
+  const handterBlanding = () => {
+    setBlandar(true)
+    genererOppskrift()
+  }
+
+  return {
+    oppskrift,
+    setOppskrift,
+    blandar,
+    setBlandar,
+    handterBlanding,
+    recipeHistory,
+    fetchRecipeHistory,
+    error
+  }
+}
+
+================================================================================
+
+File: hooks/use-session.ts
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
+
+const supabase = createClient(
+  'https://apenpdwhwhcdfoksstsf.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZW5wZHdod2hjZGZva3NzdHNmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyOTE2MjUyNSwiZXhwIjoyMDQ0NzM4NTI1fQ.6azz4luS5CSBi6OGsyi_tw7NczajdvBRaUYZHqVJAY4'
+)
+
+export type User = {
+  id: string
+  namn: string
+  farge: string
+}
+
+export function useSession(initialSessionCode?: string) {
+  const router = useRouter()
+  const [sessionStarted, setSessionStarted] = useState(false)
+  const [sessionCode, setSessionCode] = useState(initialSessionCode || '')
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [participants, setParticipants] = useState<User[]>([])
+
+  useEffect(() => {
+    if (initialSessionCode) {
+      setSessionStarted(true)
+      setSessionCode(initialSessionCode)
+      joinSession(initialSessionCode)
+    }
+  }, [initialSessionCode])
+
+  useEffect(() => {
+    if (sessionStarted && sessionCode) {
+      const channel = supabase.channel(`room:${sessionCode}`)
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState()
+          const participants = Object.values(state).flat() as User[]
+          setParticipants(participants)
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED' && currentUser) {
+            await channel.track(currentUser)
+          }
+        })
+
+      return () => {
+        channel.unsubscribe()
+      }
+    }
+  }, [sessionStarted, sessionCode, currentUser])
+
+  const joinSession = async (code: string) => {
+    const { data, error } = await supabase
+      .rpc('get_session_data', { p_session_code: code })
+
+    if (error) {
+      console.error('Error joining session:', error)
+      return
+    }
+
+    const sessionData = data[0]
+    setSessionCode(sessionData.session_code)
+    
+    const users = data.reduce((acc: User[], curr: any) => {
+      if (curr.user_id && !acc.some((u: User) => u.id === curr.user_id)) {
+        acc.push({ id: curr.user_id, namn: curr.user_name, farge: curr.user_color })
+      }
+      return acc
+    }, [])
+    setParticipants(users)
+
+    setSessionStarted(true)
+  }
+
+  const handleCreateSession = async (username: string) => {
+    const code = Math.floor(1000 + Math.random() * 9000).toString()
+    const newUser: User = { id: '', namn: username, farge: '#' + Math.floor(Math.random()*16777215).toString(16) }
+
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .insert({ code })
+      .select()
+      .single()
+
+    if (sessionError) {
+      console.error('Error creating session:', sessionError)
+      return
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({ session_id: sessionData.id, name: newUser.namn, color: newUser.farge })
+      .select()
+      .single()
+
+    if (userError) {
+      console.error('Error creating user:', userError)
+      return
+    }
+
+    newUser.id = userData.id
+    setSessionCode(code)
+    setCurrentUser(newUser)
+    setParticipants([newUser])
+    setSessionStarted(true)
+
+    router.push(`/${code}`)
+  }
+
+  const handleJoinSession = async (username: string, code: string) => {
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('code', code)
+      .single()
+
+    if (sessionError) {
+      console.error('Error finding session:', sessionError)
+      return
+    }
+
+    const newUser: User = { id: '', namn: username, farge: '#' + Math.floor(Math.random()*16777215).toString(16) }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({ session_id: sessionData.id, name: newUser.namn, color: newUser.farge })
+      .select()
+      .single()
+
+    if (userError) {
+      console.error('Error creating user:', userError)
+      return
+    }
+
+    newUser.id = userData.id
+    setCurrentUser(newUser)
+    setSessionStarted(true)
+    await joinSession(code)
+    router.push(`/${code}`)
+  }
+
+  return {
+    sessionStarted,
+    sessionCode,
+    currentUser,
+    participants,
+    handleCreateSession,
+    handleJoinSession
+  }
+}
+
+================================================================================
+
+File: lib/utils.ts
+
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+================================================================================
+
