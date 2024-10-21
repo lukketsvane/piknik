@@ -139,12 +139,35 @@ export function useSession(initialSessionCode?: string) {
     router.push(`/${code}`)
   }
 
+  const handleStopSession = async () => {
+    if (currentUser && sessionCode) {
+      const channel = supabase.channel(`room:${sessionCode}`)
+      await channel.untrack()
+      await channel.unsubscribe()
+
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', currentUser.id)
+
+      if (error) {
+        console.error('Error removing user from session:', error)
+      }
+
+      setSessionStarted(false)
+      setSessionCode('')
+      setCurrentUser(null)
+      setParticipants([])
+    }
+  }
+
   return {
     sessionStarted,
     sessionCode,
     currentUser,
     participants,
     handleCreateSession,
-    handleJoinSession
+    handleJoinSession,
+    handleStopSession
   }
 }
