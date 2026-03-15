@@ -40,46 +40,46 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
-					class="w-full flex items-center p-3.5 rounded-2xl cursor-pointer transition-all duration-200 tap-feedback border-l-4
+					class="w-full flex items-center p-3 rounded-2xl cursor-pointer transition-all duration-200 tap-feedback border-l-4
 						{selected
-							? 'bg-purple-500 border-l-purple-700 text-white'
+							? 'bg-purple-100 border-l-purple-500'
 							: 'bg-white border-l-transparent ' + kategoriClass[ingrediens.kategori as Kategori]}"
 					onclick={() => ingredientsStore.toggleSelection(ingrediens, sessionCode)}
 				>
 					<div class="flex items-center flex-grow min-w-0">
 						<div
-							class="w-11 h-11 mr-3 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-colors
-								{selected ? 'bg-purple-600' : 'bg-gray-50'}"
+							class="w-9 h-9 mr-2.5 rounded-lg flex items-center justify-center text-lg flex-shrink-0 transition-colors
+								{selected ? 'bg-purple-500 text-white text-sm font-bold' : 'bg-gray-50'}"
 						>
 							{selected ? '✓' : (kategoriIkon[ingrediens.kategori as Kategori] || '🍽️')}
 						</div>
 						<div class="flex-grow min-w-0 text-left">
-							<div class="font-bold text-[16px] truncate {selected ? 'text-white' : 'text-gray-900'}">{ingrediens.namn}</div>
-							<div class="text-[14px] font-semibold {selected ? 'text-purple-200' : 'text-gray-500'}">{ingrediens.mengde} {ingrediens.eining}</div>
+							<div class="font-semibold text-[15px] truncate {selected ? 'text-purple-700' : 'text-gray-900'}">{ingrediens.namn}</div>
+							<div class="text-[13px] font-medium {selected ? 'text-purple-400' : 'text-gray-400'}">{ingrediens.mengde} {ingrediens.eining}</div>
 						</div>
 					</div>
 					<div class="flex gap-1 flex-shrink-0 ml-2">
 						<button
 							type="button"
 							aria-label="Rediger {ingrediens.namn}"
-							class="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+							class="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
 							onclick={(e) => {
 								e.stopPropagation()
 								ingredientsStore.startEdit(ingrediens)
 							}}
 						>
-							<Pencil class="h-4 w-4 text-gray-400" />
+							<Pencil class="h-3.5 w-3.5 text-gray-300" />
 						</button>
 						<button
 							type="button"
 							aria-label="Slett {ingrediens.namn}"
-							class="p-2 rounded-xl hover:bg-red-50 transition-colors"
+							class="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
 							onclick={(e) => {
 								e.stopPropagation()
 								ingredientsStore.deleteIngredient(ingrediens, sessionCode)
 							}}
 						>
-							<Trash2 class="h-4 w-4 text-gray-400" />
+							<Trash2 class="h-3.5 w-3.5 text-gray-300" />
 						</button>
 					</div>
 				</div>
