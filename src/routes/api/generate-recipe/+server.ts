@@ -53,7 +53,7 @@ Svar BERRE med gyldig JSON i dette formatet, utan noko anna tekst:
 }`
 
 	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+		const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
 		const result = await model.generateContent(prompt)
 		const text = result.response.text()
 

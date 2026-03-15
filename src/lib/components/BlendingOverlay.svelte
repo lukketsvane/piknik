@@ -4,9 +4,9 @@
 	let { isBlending }: { isBlending: boolean } = $props()
 
 	const phases = [
-		{ animation: 'carry-boxes', message: 'Samlar ingrediensar...' },
-		{ animation: 'run-fast', message: 'Spring til kjokenet...' },
-		{ animation: 'dance-music', message: 'Blandar oppskrift...' }
+		{ animation: 'carry-boxes', message: 'Hmm...' },
+		{ animation: 'run-fast', message: 'Vent litt...' },
+		{ animation: 'dance-music', message: 'Nesten!' }
 	]
 
 	let phaseIndex = $state(0)
