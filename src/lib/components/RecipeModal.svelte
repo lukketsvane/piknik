@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Oppskrift } from '$lib/types'
-	import { X } from 'lucide-svelte'
+	import { X, Share2 } from 'lucide-svelte'
 
 	let { oppskrift, onClose }: { oppskrift: Oppskrift; onClose: () => void } = $props()
 
@@ -9,6 +9,17 @@
 		'bg-pink-500', 'bg-amber-500', 'bg-teal-500', 'bg-red-500',
 		'bg-indigo-500', 'bg-lime-500', 'bg-cyan-500', 'bg-rose-500'
 	]
+
+	const shareUrl = $derived(oppskrift.id ? `https://piknik.iverfinne.no/recipe/${oppskrift.id}` : '')
+
+	async function handleShare() {
+		if (!shareUrl) return
+		if (navigator.share) {
+			await navigator.share({ title: oppskrift.tittel, text: oppskrift.skildring, url: shareUrl })
+		} else {
+			await navigator.clipboard.writeText(shareUrl)
+		}
+	}
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -24,10 +35,17 @@
 	>
 		<!-- Header -->
 		<div class="bg-piknik-gradient-card px-5 pt-5 pb-5 relative">
-			<button class="absolute top-4 right-4 p-2 rounded-full bg-white/20 text-white tap-feedback" onclick={onClose}>
-				<X class="h-5 w-5" />
-			</button>
-			<h2 class="text-[28px] font-black text-white leading-tight pr-10">{oppskrift.tittel}</h2>
+			<div class="absolute top-4 right-4 flex gap-2">
+				{#if shareUrl}
+					<button class="p-2 rounded-full bg-white/20 text-white tap-feedback" onclick={handleShare}>
+						<Share2 class="h-5 w-5" />
+					</button>
+				{/if}
+				<button class="p-2 rounded-full bg-white/20 text-white tap-feedback" onclick={onClose}>
+					<X class="h-5 w-5" />
+				</button>
+			</div>
+			<h2 class="text-[28px] font-black text-white leading-tight pr-20">{oppskrift.tittel}</h2>
 			<p class="text-white/80 text-[15px] font-medium mt-1">{oppskrift.skildring}</p>
 		</div>
 
