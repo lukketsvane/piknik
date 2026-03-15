@@ -4,8 +4,8 @@
 	let { children }: { children: Snippet } = $props()
 </script>
 
-<div class="w-full min-h-[100dvh] bg-piknik-gradient-subtle flex flex-col">
-	<div class="flex-grow overflow-y-auto scroll-ios pb-24">
+<div class="w-full h-[100dvh] bg-piknik-gradient-subtle flex flex-col overflow-hidden">
+	<div class="flex-grow flex flex-col overflow-hidden">
 		{@render children()}
 	</div>
 </div>

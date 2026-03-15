@@ -46,11 +46,7 @@ class IngredientsStore {
 			return
 		}
 
-		if (ingredientsData.length === 0) {
-			await this.addRandomIngredients(sessionData.id, sessionCode)
-		} else {
-			this.ingrediensar = ingredientsData.map(mapIngredientFromDB)
-		}
+		this.ingrediensar = ingredientsData.map(mapIngredientFromDB)
 
 		// Subscribe to broadcast
 		this.channel = supabase.channel(`ingredients:${sessionCode}`)

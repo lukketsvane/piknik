@@ -134,6 +134,15 @@ body {
 	background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
 }
 
+/* Touch/gesture polish for PWA */
+button, [role="button"], .tap-feedback, a {
+	touch-action: manipulation;
+}
+
+.scroll-area {
+	touch-action: pan-y;
+}
+
 /* Tap feedback — iOS-native feel */
 button, [role="button"], .tap-feedback {
 	transition: transform 0.1s ease, opacity 0.1s ease;

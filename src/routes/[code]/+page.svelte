@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte'
-	import { Share2, Plus } from 'lucide-svelte'
+	import { Share2, Plus, Camera } from 'lucide-svelte'
 	import * as QRCode from 'qrcode'
 	import { sessionStore } from '$lib/stores/session.svelte'
 	import { ingredientsStore } from '$lib/stores/ingredients.svelte'
 	import { recipesStore } from '$lib/stores/recipes.svelte'
 	import { audioStore } from '$lib/stores/audio.svelte'
 	import { cuisineOptions } from '$lib/data/cuisine-options'
+	import { generateUsername } from '$lib/data/random-names'
 	import AppShell from '$lib/components/AppShell.svelte'
 	import IngredientList from '$lib/components/IngredientList.svelte'
 	import AddIngredientDialog from '$lib/components/AddIngredientDialog.svelte'
@@ -23,12 +24,13 @@
 	let showShareDialog = $state(false)
 	let showInfo = $state(false)
 	let showRecipeHistory = $state(false)
-	let showJoinDialog = $state(false)
-	let username = $state('')
 	let selectedCuisines = $state<string[]>([])
 	let isChildFriendly = $state(false)
 	let isAdvancedMode = $state(false)
 	let qrCodeDataUrl = $state('')
+	let identifyingIngredient = $state(false)
+
+	let cameraInput: HTMLInputElement
 
 	const shareUrl = $derived(`https://piknik.iverfinne.no/${data.sessionCode}`)
 
@@ -42,6 +44,7 @@
 
 	// Mascot state machine
 	let mascotAnimation = $derived(
+		identifyingIngredient ? 'run-fast' :
 		recipesStore.blandar ? 'dance-music' :
 		recipesStore.oppskrift ? 'happy-bounce-a' :
 		recipesStore.error ? 'walk-steam' :
@@ -52,11 +55,12 @@
 	)
 
 	let mascotMessage = $derived(
+		identifyingIngredient ? 'Ser på biletet...' :
 		recipesStore.blandar ? 'Blandar oppskrift...' :
 		recipesStore.oppskrift ? 'Oppskrifta er klar!' :
 		recipesStore.error ? 'Noko gjekk gale...' :
 		ingredientsStore.ingrediensar.length === 0 ? 'Legg til ingrediensar!' :
-		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Klar til a blande?' :
+		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Klar til å blande?' :
 		ingredientsStore.valgteIngrediensar.length === 1 ? 'Ein til!' :
 		'Vel minst 2 ingrediensar!'
 	)
@@ -70,10 +74,13 @@
 		}
 	})
 
-	// Check if user needs to join
+	// Auto-join when visiting a session URL directly
 	$effect(() => {
 		if (!sessionStore.sessionStarted && data.sessionCode) {
-			showJoinDialog = true
+			const name = generateUsername()
+			sessionStore.joinSession(name, data.sessionCode).then(() => {
+				ingredientsStore.init(data.sessionCode)
+			})
 		}
 	})
 
@@ -108,14 +115,6 @@
 		audioStore.cleanup()
 	})
 
-	async function handleJoinWithUsername() {
-		if (username && data.sessionCode) {
-			await sessionStore.joinSession(username, data.sessionCode)
-			showJoinDialog = false
-			await ingredientsStore.init(data.sessionCode)
-		}
-	}
-
 	async function handleBlend() {
 		await recipesStore.generateRecipe(
 			data.sessionCode,
@@ -140,50 +139,66 @@
 		await sessionStore.stopSession()
 	}
 
+	async function handleCameraCapture(e: Event) {
+		const input = e.target as HTMLInputElement
+		const file = input.files?.[0]
+		if (!file) return
+
+		identifyingIngredient = true
+
+		try {
+			const base64 = await fileToBase64(file)
+
+			const response = await fetch('/api/identify-ingredient', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ image: base64 })
+			})
+
+			if (!response.ok) throw new Error('Failed to identify')
+
+			const ingredient = await response.json()
+
+			await ingredientsStore.addIngredient(
+				{
+					namn: ingredient.namn,
+					mengde: ingredient.mengde,
+					eining: ingredient.eining,
+					kategori: ingredient.kategori,
+					bilde: '',
+					brukar: null
+				},
+				data.sessionCode
+			)
+		} catch (err) {
+			console.error('Error identifying ingredient:', err)
+		} finally {
+			identifyingIngredient = false
+			input.value = ''
+		}
+	}
+
+	function fileToBase64(file: File): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader()
+			reader.onload = () => resolve(reader.result as string)
+			reader.onerror = reject
+			reader.readAsDataURL(file)
+		})
+	}
+
 	let canBlend = $derived(
 		ingredientsStore.valgteIngrediensar.length >= 2 && !recipesStore.blandar
 	)
 </script>
 
-<!-- Join dialog for new users -->
-{#if showJoinDialog && !sessionStore.sessionStarted}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 flex items-center justify-center z-50" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.95) 0%, rgba(147, 51, 234, 0.9) 100%);">
-		<div class="bg-white rounded-3xl p-7 w-full max-w-sm mx-4 page-enter">
-			<div class="flex flex-col items-center mb-5">
-				<img src="/piknik/walk-baguette-a.gif" alt="Velkomen" class="w-24 h-24 object-contain mascot-enter mb-2" />
-				<h2 class="text-2xl font-black text-gray-900">Bli med i okta</h2>
-				<p class="text-[15px] text-gray-500 mt-1 font-medium">Nokon inviterte deg til a lage mat!</p>
-			</div>
-			<input
-				type="text"
-				bind:value={username}
-				placeholder="Skriv inn brukarnamnet ditt"
-				class="w-full h-14 px-5 border-2 border-purple-100 rounded-2xl bg-purple-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[16px] mb-4 transition-all"
-				onkeydown={(e) => e.key === 'Enter' && username && handleJoinWithUsername()}
-			/>
-			<button
-				onclick={handleJoinWithUsername}
-				disabled={!username}
-				class="w-full h-14 rounded-2xl text-white font-extrabold text-[18px] transition-all
-					{!username ? 'bg-gray-300 cursor-not-allowed' : 'bg-piknik-gradient active:scale-[0.97]'}"
-			>
-				Bli med
-			</button>
-		</div>
-	</div>
-{/if}
-
 {#if sessionStore.sessionStarted}
 	<AppShell>
-		<div class="max-w-[390px] mx-auto page-enter">
+		<div class="flex flex-col h-full max-w-[390px] mx-auto page-enter">
 			<!-- Header -->
-			<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl">
+			<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl flex-shrink-0">
 				<div class="flex justify-between items-center">
-					<div class="flex items-center gap-2.5">
-						<img src="/piknik/idle-mushroom.gif" alt="PikNik" class="w-10 h-10 object-contain rounded-xl" />
-						<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
-					</div>
+					<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
 					<div class="flex items-center gap-2">
 						<div class="flex -space-x-2">
 							{#each sessionStore.participants as participant (participant.id)}
@@ -204,8 +219,8 @@
 				<StepIndicator {currentStep} />
 			</div>
 
-			<!-- Mascot Guide -->
-			<div class="flex justify-center py-3">
+			<!-- Mascot Guide — fills middle area -->
+			<div class="flex-1 flex items-center justify-center min-h-0">
 				<MascotGuide
 					animation={mascotAnimation}
 					message={mascotMessage}
@@ -213,29 +228,45 @@
 				/>
 			</div>
 
-			<!-- Ingredients section -->
-			<div class="px-5">
-				<div class="flex justify-end mb-3">
-					<button
-						class="w-10 h-10 flex items-center justify-center rounded-2xl bg-piknik-gradient text-white tap-feedback"
-						onclick={() => (ingredientsStore.visLeggTilIngrediens = true)}
-					>
-						<Plus class="w-5 h-5" />
-					</button>
-				</div>
+			<!-- FAB buttons — floating above ingredient list -->
+			<div class="flex justify-end gap-2 px-5 mb-2 flex-shrink-0">
+				<input
+					type="file"
+					accept="image/*"
+					capture="environment"
+					class="hidden"
+					bind:this={cameraInput}
+					onchange={handleCameraCapture}
+				/>
+				<button
+					class="w-12 h-12 flex items-center justify-center rounded-2xl text-white tap-feedback transition-all
+						{identifyingIngredient ? 'bg-orange-500 animate-gentle-pulse' : 'bg-orange-500'}"
+					onclick={() => cameraInput.click()}
+					disabled={identifyingIngredient}
+				>
+					<Camera class="w-5 h-5" />
+				</button>
+				<button
+					class="w-12 h-12 flex items-center justify-center rounded-2xl bg-piknik-gradient text-white tap-feedback"
+					onclick={() => (ingredientsStore.visLeggTilIngrediens = true)}
+				>
+					<Plus class="w-5 h-5" />
+				</button>
+			</div>
 
+			<!-- Ingredients section — bottom-aligned -->
+			<div class="px-5 pb-20 flex-shrink-0 max-h-[45%] overflow-y-auto scroll-area">
 				<IngredientList sessionCode={data.sessionCode} />
 
 				{#if recipesStore.error}
-					<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-[13px] text-red-600 flex items-center gap-2">
-						<img src="/piknik/walk-steam.gif" alt="Feil" class="w-8 h-8 object-contain" />
+					<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-[14px] font-semibold text-red-600 flex items-center gap-2">
 						{recipesStore.error}
 					</div>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Blend button — fixed above bottom bar -->
+		<!-- Blend button — fixed at bottom -->
 		<div class="fixed bottom-0 left-0 right-0 px-5 py-4 z-20 safe-bottom">
 			<div class="max-w-[390px] mx-auto">
 				<button
@@ -286,9 +317,8 @@
 			<div
 				class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl bottom-sheet-enter safe-bottom overflow-hidden"
 			>
-				<!-- Header with mascot -->
+				<!-- Header -->
 				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
-					<img src="/piknik/walk-baguette-a.gif" alt="Del" class="w-12 h-12 object-contain" />
 					<h2 class="text-xl font-black text-gray-900">Del okt</h2>
 					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto" onclick={() => (showShareDialog = false)}>
 						✕
@@ -326,7 +356,7 @@
 						<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3">Innstillingar</h3>
 
 						<div class="mb-3">
-							<h4 class="text-sm font-medium mb-2 text-gray-700">Velg kjokken:</h4>
+							<h4 class="text-[15px] font-bold mb-2 text-gray-700">Velg kjokken:</h4>
 							<div class="grid grid-cols-2 gap-2">
 								{#each cuisineOptions as cuisine}
 									<label class="flex items-center gap-2 cursor-pointer">
@@ -336,14 +366,14 @@
 											onchange={() => handleCuisineChange(cuisine)}
 											class="w-4 h-4 rounded border-purple-300 text-purple-500 focus:ring-purple-500"
 										/>
-										<span class="text-sm">{cuisine}</span>
+										<span class="text-[14px] font-medium">{cuisine}</span>
 									</label>
 								{/each}
 							</div>
 						</div>
 
 						<label class="flex items-center justify-between py-2.5">
-							<span class="text-sm font-medium text-gray-700">Barnevennleg oppskrift</span>
+							<span class="text-[15px] font-semibold text-gray-700">Barnevennleg oppskrift</span>
 							<button
 								type="button"
 								role="switch"
@@ -359,7 +389,7 @@
 						</label>
 
 						<label class="flex items-center justify-between py-2.5">
-							<span class="text-sm font-medium text-gray-700">Avansert modus</span>
+							<span class="text-[15px] font-semibold text-gray-700">Avansert modus</span>
 							<button
 								type="button"
 								role="switch"
@@ -399,7 +429,6 @@
 				class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl bottom-sheet-enter safe-bottom overflow-hidden"
 			>
 				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
-					<img src="/piknik/idle-stand-a.gif" alt="Info" class="w-12 h-12 object-contain" />
 					<h2 class="text-xl font-black text-gray-900">Om PikNik</h2>
 					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto transition-colors" onclick={() => (showInfo = false)}>
 						✕
@@ -417,7 +446,7 @@
 								<span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center">
 									{i + 1}
 								</span>
-								<span class="text-sm leading-relaxed pt-0.5 text-gray-700">{step}</span>
+								<span class="text-[15px] leading-relaxed pt-0.5 font-medium text-gray-700">{step}</span>
 							</li>
 						{/each}
 					</ol>

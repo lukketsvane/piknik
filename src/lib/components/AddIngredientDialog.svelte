@@ -94,7 +94,7 @@
 					alt="Maskot"
 					class="w-12 h-12 object-contain"
 				/>
-				<h2 class="text-lg font-bold text-gray-900">
+				<h2 class="text-xl font-black text-gray-900">
 					{ingredientsStore.redigeringIngrediens ? 'Rediger ingrediens' : 'Legg til ingrediens'}
 				</h2>
 				<button class="p-2 rounded-full hover:bg-purple-50 ml-auto transition-colors" onclick={handleClose}> ✕ </button>
@@ -163,7 +163,7 @@
 					</button>
 					<button
 						type="submit"
-						class="flex-1 py-3.5 rounded-2xl bg-piknik-gradient text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-xl transition-all"
+						class="flex-1 py-3.5 rounded-2xl bg-piknik-gradient text-white font-extrabold text-[16px] transition-all"
 					>
 						{ingredientsStore.redigeringIngrediens ? 'Oppdater' : 'Legg til'}
 					</button>
