@@ -3,6 +3,12 @@
 	import { X } from 'lucide-svelte'
 
 	let { oppskrift, onClose }: { oppskrift: Oppskrift; onClose: () => void } = $props()
+
+	const stepColors = [
+		'bg-purple-500', 'bg-orange-500', 'bg-emerald-500', 'bg-blue-500',
+		'bg-pink-500', 'bg-amber-500', 'bg-teal-500', 'bg-red-500',
+		'bg-indigo-500', 'bg-lime-500', 'bg-cyan-500', 'bg-rose-500'
+	]
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -43,7 +49,7 @@
 				<ol class="space-y-4 stagger-in" style="animation-delay: 200ms">
 					{#each oppskrift.steg as steg, index}
 						<li class="flex gap-3">
-							<div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white text-[14px] font-black flex items-center justify-center">
+							<div class="flex-shrink-0 w-8 h-8 rounded-full {stepColors[index % stepColors.length]} text-white text-[14px] font-black flex items-center justify-center">
 								{index + 1}
 							</div>
 							<p class="text-[15px] leading-relaxed text-gray-800 font-medium pt-1">{steg}</p>
