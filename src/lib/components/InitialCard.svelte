@@ -73,9 +73,7 @@
 					</label>
 				</div>
 
-				<!-- Show assigned name -->
 				<div class="bg-purple-50 rounded-2xl px-5 py-3 border-2 border-purple-200">
-					<p class="text-[12px] font-bold uppercase tracking-wider text-purple-400 mb-0.5">Du er</p>
 					<p class="text-[20px] font-black text-purple-700">{username}</p>
 				</div>
 

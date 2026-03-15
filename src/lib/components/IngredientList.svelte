@@ -31,14 +31,7 @@
 </script>
 
 {#if ingredientsStore.ingrediensar.length === 0}
-	<div class="flex flex-col items-center justify-center py-10 gap-3">
-		<img
-			src="/piknik/sleep-b.gif"
-			alt="Sovande maskot"
-			class="w-48 h-48 object-contain mascot-float"
-		/>
-		<p class="text-[17px] font-bold text-gray-400">Legg til ingrediensar!</p>
-	</div>
+	<!-- Empty state — mascot is already shown above by MascotGuide -->
 {:else}
 	<ul class="space-y-2.5">
 		{#each ingredientsStore.ingrediensar as ingrediens, index (ingrediens.id)}

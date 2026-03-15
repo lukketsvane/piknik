@@ -55,14 +55,14 @@
 	)
 
 	let mascotMessage = $derived(
-		identifyingIngredient ? 'Ser på biletet...' :
-		recipesStore.blandar ? 'Blandar oppskrift...' :
-		recipesStore.oppskrift ? 'Oppskrifta er klar!' :
-		recipesStore.error ? 'Noko gjekk gale...' :
-		ingredientsStore.ingrediensar.length === 0 ? 'Legg til ingrediensar!' :
-		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Klar til å blande?' :
+		identifyingIngredient ? 'Ser...' :
+		recipesStore.blandar ? 'Blandar...' :
+		recipesStore.oppskrift ? 'Klar!' :
+		recipesStore.error ? 'Oops!' :
+		ingredientsStore.ingrediensar.length === 0 ? 'Legg til!' :
+		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Bland?' :
 		ingredientsStore.valgteIngrediensar.length === 1 ? 'Ein til!' :
-		'Vel minst 2 ingrediensar!'
+		'Vel 2+'
 	)
 
 	// Generate QR code when share dialog opens
@@ -315,17 +315,15 @@
 			>
 				<!-- Header -->
 				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
-					<h2 class="text-xl font-black text-gray-900">Del okt</h2>
+					<h2 class="text-xl font-black text-gray-900">Del</h2>
 					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto" onclick={() => (showShareDialog = false)}>
 						✕
 					</button>
 				</div>
 
 				<div class="px-6 pb-6">
-					<!-- Session code -->
 					<div class="bg-purple-50 rounded-2xl p-4 mb-4 text-center border-2 border-purple-300">
 						<p class="text-5xl font-black tracking-widest text-purple-700">{data.sessionCode}</p>
-						<p class="text-[14px] text-purple-500 mt-1 font-bold">Del denne koden</p>
 					</div>
 
 					{#if qrCodeDataUrl}
@@ -349,10 +347,8 @@
 
 					<!-- Settings section -->
 					<div class="border-t border-purple-100 pt-4">
-						<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3">Innstillingar</h3>
-
 						<div class="mb-3">
-							<h4 class="text-[15px] font-bold mb-2 text-gray-700">Velg kjokken:</h4>
+							<h4 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-2">Kjøkken</h4>
 							<div class="grid grid-cols-2 gap-2">
 								{#each cuisineOptions as cuisine}
 									<label class="flex items-center gap-2 cursor-pointer">
@@ -369,7 +365,7 @@
 						</div>
 
 						<label class="flex items-center justify-between py-2.5">
-							<span class="text-[15px] font-semibold text-gray-700">Barnevennleg oppskrift</span>
+							<span class="text-[15px] font-semibold text-gray-700">Barnevennleg</span>
 							<button
 								type="button"
 								role="switch"
@@ -385,7 +381,7 @@
 						</label>
 
 						<label class="flex items-center justify-between py-2.5">
-							<span class="text-[15px] font-semibold text-gray-700">Avansert modus</span>
+							<span class="text-[15px] font-semibold text-gray-700">Avansert</span>
 							<button
 								type="button"
 								role="switch"
