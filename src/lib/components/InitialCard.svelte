@@ -22,7 +22,7 @@
 	let isDisabled = $derived(!isCreatingSession && sessionCode.length !== 4)
 </script>
 
-<div class="w-full min-h-[100dvh] flex flex-col items-center justify-center px-5 bg-piknik-gradient relative overflow-hidden">
+<div class="w-full h-full flex flex-col items-center justify-center px-5 bg-piknik-gradient relative overflow-hidden">
 	<!-- Decorative circles -->
 	<div class="absolute top-[-80px] right-[-60px] w-64 h-64 bg-white/5 rounded-full"></div>
 	<div class="absolute bottom-[20%] left-[-40px] w-40 h-40 bg-white/5 rounded-full"></div>
@@ -43,7 +43,7 @@
 			<img
 				src="/piknik/walk-groceries-a.gif"
 				alt="PikNik maskot"
-				class="w-56 h-56 object-contain mascot-float"
+				class="w-40 h-40 object-contain mascot-float"
 			/>
 		</div>
 
