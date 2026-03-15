@@ -42,7 +42,7 @@
 				<img
 					src="/piknik/{currentPhase.animation}.gif"
 					alt="Blandar..."
-					class="w-72 h-72 object-contain mascot-enter"
+					class="w-52 h-52 object-contain mascot-enter"
 				/>
 			{/key}
 
