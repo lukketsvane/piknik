@@ -53,6 +53,13 @@
 html {
 	height: 100%;
 	overflow: hidden;
+	touch-action: pan-x pan-y;
+	-ms-touch-action: pan-x pan-y;
+}
+
+/* Prevent iOS pinch-to-zoom globally */
+* {
+	-webkit-touch-callout: none;
 }
 
 body {

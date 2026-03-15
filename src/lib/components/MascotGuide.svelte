@@ -15,8 +15,6 @@
 		lg: 'w-80 h-80'
 	}
 
-	let isVideo = $derived(animation === 'sleep-loop')
-
 	let fadeKey = $state(0)
 	let prevAnimation = ''
 
@@ -36,21 +34,10 @@
 	{/if}
 
 	{#key fadeKey}
-		{#if isVideo}
-			<video
-				src="/piknik/{animation}.mp4"
-				autoplay
-				loop
-				muted
-				playsinline
-				class="{sizeClasses[size]} object-contain mascot-enter"
-			></video>
-		{:else}
-			<img
-				src="/piknik/{animation}.gif"
-				alt="PikNik maskot"
-				class="{sizeClasses[size]} object-contain mascot-enter"
-			/>
-		{/if}
+		<img
+			src="/piknik/{animation}.gif"
+			alt="PikNik maskot"
+			class="{sizeClasses[size]} object-contain mascot-enter"
+		/>
 	{/key}
 </div>

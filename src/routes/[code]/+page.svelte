@@ -45,7 +45,7 @@
 		recipesStore.oppskrift ? 'happy-bounce-a' :
 		recipesStore.error ? 'walk-steam' :
 		ingredientsStore.valgteIngrediensar.length >= 2 ? 'flex-question' :
-		'sleep-loop'
+		'sleep-a'
 	)
 
 	let mascotMessage = $derived(
@@ -249,7 +249,7 @@
 		</div>
 
 		<!-- Ingredients section — scrollable, bottom-aligned -->
-		<div class="px-5 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
+		<div class="px-5 pb-4 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
 			<IngredientList sessionCode={data.sessionCode} />
 
 			{#if recipesStore.error}
