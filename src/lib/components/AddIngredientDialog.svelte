@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Ingrediens, Kategori, Eining } from '$lib/types'
 	import { ingredientsStore } from '$lib/stores/ingredients.svelte'
+	import { searchFood, type FoodItem } from '$lib/data/food-database'
 
 	let {
 		isOpen,
@@ -16,8 +17,10 @@
 	let mengde = $state('')
 	let eining = $state<Eining>('stk')
 	let kategori = $state<Kategori>('Anna')
+	let suggestions = $state<FoodItem[]>([])
+	let showSuggestions = $state(false)
 
-	const einingar: Eining[] = ['dl', 'g', 'hg', 'kg', 'stk', 'ss', 'ts', 'ml', 'l']
+	const einingar: Eining[] = ['stk', 'g', 'kg', 'dl', 'ml', 'l', 'ss', 'ts', 'hg']
 	const kategoriar: { value: Kategori; emoji: string }[] = [
 		{ value: 'Frukt', emoji: '🍎' },
 		{ value: 'Grønsaker', emoji: '🥕' },
@@ -45,6 +48,26 @@
 		mengde = ''
 		eining = 'stk'
 		kategori = 'Anna'
+		suggestions = []
+		showSuggestions = false
+	}
+
+	function handleNameInput() {
+		if (namn.length >= 1) {
+			suggestions = searchFood(namn)
+			showSuggestions = suggestions.length > 0
+		} else {
+			suggestions = []
+			showSuggestions = false
+		}
+	}
+
+	function selectSuggestion(item: FoodItem) {
+		namn = item.namn
+		mengde = String(item.mengde)
+		eining = item.eining
+		kategori = item.kategori
+		showSuggestions = false
 	}
 
 	async function handleSubmit(e: Event) {
@@ -55,7 +78,7 @@
 			mengde: parseFloat(mengde),
 			eining,
 			kategori,
-			bilde: '/placeholder.svg?height=40&width=40',
+			bilde: '',
 			brukar: null
 		}
 
@@ -87,27 +110,43 @@
 		<div
 			class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl bottom-sheet-enter safe-bottom overflow-hidden"
 		>
-			<!-- Header with mascot -->
 			<div class="flex items-center gap-3 px-6 pt-5 pb-3">
-				<img
-					src="/piknik/walk-baguette-a.gif"
-					alt="Maskot"
-					class="w-12 h-12 object-contain"
-				/>
 				<h2 class="text-xl font-black text-gray-900">
-					{ingredientsStore.redigeringIngrediens ? 'Rediger ingrediens' : 'Legg til ingrediens'}
+					{ingredientsStore.redigeringIngrediens ? 'Rediger' : 'Legg til'}
 				</h2>
 				<button class="p-2 rounded-full hover:bg-purple-50 ml-auto transition-colors" onclick={handleClose}> ✕ </button>
 			</div>
 
-			<form onsubmit={handleSubmit} class="px-6 pb-6 space-y-4">
-				<input
-					type="text"
-					bind:value={namn}
-					placeholder="Ingrediensnamn"
-					required
-					class="w-full h-13 px-4 py-3 border-2 border-purple-100 rounded-2xl bg-purple-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[16px] transition-all"
-				/>
+			<form onsubmit={handleSubmit} class="px-6 pb-6 space-y-3">
+				<!-- Name input with autocomplete -->
+				<div class="relative">
+					<input
+						type="text"
+						bind:value={namn}
+						oninput={handleNameInput}
+						onfocus={handleNameInput}
+						placeholder="Søk eller skriv ingrediens..."
+						required
+						autocomplete="off"
+						class="w-full h-13 px-4 py-3 border-2 border-purple-200 rounded-2xl bg-purple-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[16px] font-semibold transition-all"
+					/>
+
+					{#if showSuggestions}
+						<div class="absolute left-0 right-0 top-full mt-1 bg-white border-2 border-purple-200 rounded-2xl overflow-hidden z-10 max-h-48 overflow-y-auto">
+							{#each suggestions as item}
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div
+									class="px-4 py-2.5 flex items-center justify-between cursor-pointer hover:bg-purple-50 tap-feedback transition-colors"
+									onclick={() => selectSuggestion(item)}
+								>
+									<span class="text-[15px] font-bold text-gray-900">{item.namn}</span>
+									<span class="text-[13px] font-semibold text-purple-500">{item.mengde} {item.eining}</span>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 
 				<div class="flex gap-3">
 					<input
@@ -115,15 +154,15 @@
 						bind:value={mengde}
 						placeholder="Mengde"
 						required
-						class="w-1/2 h-13 px-4 py-3 border-2 border-purple-100 rounded-2xl bg-purple-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[16px] transition-all"
+						class="w-1/2 h-13 px-4 py-3 border-2 border-purple-200 rounded-2xl bg-purple-50/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-[16px] font-semibold transition-all"
 					/>
 					<div class="w-1/2 flex flex-wrap gap-1.5">
 						{#each einingar as unit}
 							<button
 								type="button"
-								class="px-2.5 py-1.5 rounded-xl text-[13px] font-medium transition-all
+								class="px-2.5 py-1.5 rounded-xl text-[13px] font-bold transition-all
 									{eining === unit
-										? 'bg-purple-500 text-white shadow-sm'
+										? 'bg-purple-500 text-white'
 										: 'bg-purple-50 text-purple-600 hover:bg-purple-100'}"
 								onclick={() => (eining = unit)}
 							>
@@ -133,41 +172,29 @@
 					</div>
 				</div>
 
-				<!-- Category as horizontal scrolling chips -->
-				<div>
-					<p class="text-[12px] font-semibold uppercase tracking-wider text-purple-500 mb-2">Kategori</p>
-					<div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-						{#each kategoriar as cat}
-							<button
-								type="button"
-								class="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-[14px] font-medium whitespace-nowrap transition-all flex-shrink-0
-									{kategori === cat.value
-										? 'bg-purple-500 text-white shadow-md shadow-purple-500/20'
-										: 'bg-purple-50 text-purple-700 hover:bg-purple-100'}"
-								onclick={() => (kategori = cat.value)}
-							>
-								<span class="text-base">{cat.emoji}</span>
-								{cat.value}
-							</button>
-						{/each}
-					</div>
+				<!-- Category chips -->
+				<div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+					{#each kategoriar as cat}
+						<button
+							type="button"
+							class="flex items-center gap-1 px-3 py-2 rounded-2xl text-[13px] font-bold whitespace-nowrap transition-all flex-shrink-0
+								{kategori === cat.value
+									? 'bg-purple-500 text-white'
+									: 'bg-purple-50 text-purple-700 hover:bg-purple-100'}"
+							onclick={() => (kategori = cat.value)}
+						>
+							<span>{cat.emoji}</span>
+							{cat.value}
+						</button>
+					{/each}
 				</div>
 
-				<div class="flex gap-3 pt-2">
-					<button
-						type="button"
-						class="flex-1 py-3.5 rounded-2xl border-2 border-purple-100 font-semibold text-purple-600 hover:bg-purple-50 transition-colors"
-						onclick={handleClose}
-					>
-						Avbryt
-					</button>
-					<button
-						type="submit"
-						class="flex-1 py-3.5 rounded-2xl bg-piknik-gradient text-white font-extrabold text-[16px] transition-all"
-					>
-						{ingredientsStore.redigeringIngrediens ? 'Oppdater' : 'Legg til'}
-					</button>
-				</div>
+				<button
+					type="submit"
+					class="w-full h-14 rounded-2xl bg-piknik-gradient text-white font-black text-[17px] transition-all active:scale-[0.97]"
+				>
+					{ingredientsStore.redigeringIngrediens ? 'Oppdater' : 'Legg til'}
+				</button>
 			</form>
 		</div>
 	</div>
