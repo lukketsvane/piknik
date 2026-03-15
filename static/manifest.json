@@ -1,0 +1,25 @@
+{
+	"name": "PikNik - Kreativ matlagingsapp",
+	"short_name": "PikNik",
+	"description": "Bland ingrediensar, skap oppskrifter, del med venner!",
+	"start_url": "/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"theme_color": "#9333ea",
+	"background_color": "#ffffff",
+	"lang": "no",
+	"icons": [
+		{
+			"src": "/web-app-manifest-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable any"
+		},
+		{
+			"src": "/web-app-manifest-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable any"
+		}
+	]
+}
