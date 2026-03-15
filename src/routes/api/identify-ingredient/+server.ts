@@ -12,7 +12,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		error(400, 'Image is required')
 	}
 
-	const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
+	const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 	const prompt = `Du ser eit bilete av ein matingrediens. Identifiser ingrediensen og estimer mengda.
 

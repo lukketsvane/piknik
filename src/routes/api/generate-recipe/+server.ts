@@ -53,11 +53,10 @@ Svar BERRE med gyldig JSON i dette formatet, utan noko anna tekst:
 }`
 
 	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
+		const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 		const result = await model.generateContent(prompt)
 		const text = result.response.text()
 
-		// Extract JSON from the response (handle markdown code blocks)
 		let jsonText = text
 		const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
 		if (jsonMatch) {
@@ -68,6 +67,6 @@ Svar BERRE med gyldig JSON i dette formatet, utan noko anna tekst:
 		return json(oppskrift)
 	} catch (e) {
 		console.error('Gemini API error:', e)
-		error(500, 'Kunne ikkje generere oppskrift')
+		error(500, `Kunne ikkje generere oppskrift: ${(e as Error).message}`)
 	}
 }
