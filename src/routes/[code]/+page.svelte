@@ -42,27 +42,23 @@
 		1
 	)
 
-	// Mascot state machine
+	// Mascot state machine — sleeps until ready
 	let mascotAnimation = $derived(
 		identifyingIngredient ? 'run-fast' :
 		recipesStore.blandar ? 'dance-music' :
 		recipesStore.oppskrift ? 'happy-bounce-a' :
 		recipesStore.error ? 'walk-steam' :
-		ingredientsStore.ingrediensar.length === 0 ? 'sleep-b' :
-		ingredientsStore.valgteIngrediensar.length >= 2 ? 'sleep-a' :
-		ingredientsStore.valgteIngrediensar.length === 1 ? 'idle-stand-a' :
+		ingredientsStore.valgteIngrediensar.length >= 2 ? 'flex-question' :
 		'sleep-a'
 	)
 
 	let mascotMessage = $derived(
 		identifyingIngredient ? 'Ser...' :
-		recipesStore.blandar ? 'Blandar...' :
-		recipesStore.oppskrift ? 'Klar!' :
+		recipesStore.blandar ? '' :
+		recipesStore.oppskrift ? '' :
 		recipesStore.error ? 'Oops!' :
-		ingredientsStore.ingrediensar.length === 0 ? 'Legg til!' :
 		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Dobbelttrykk!' :
-		ingredientsStore.valgteIngrediensar.length === 1 ? 'Ein til!' :
-		'Vel 2+'
+		''
 	)
 
 	// Double-tap mascot to blend
