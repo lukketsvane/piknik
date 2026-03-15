@@ -270,7 +270,7 @@
 						? 'bg-piknik-gradient-warm active:scale-[0.97]'
 						: 'bg-gray-300 cursor-not-allowed'}"
 			>
-				{recipesStore.blandar ? 'Blandar...' : `Bland! ${canBlend ? `(${ingredientsStore.valgteIngrediensar.length})` : ''}`}
+				{recipesStore.blandar ? 'Blandar...' : 'Bland!'}
 			</button>
 		</div>
 	</AppShell>

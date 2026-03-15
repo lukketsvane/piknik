@@ -42,20 +42,20 @@
 				<div
 					class="w-full flex items-center p-3.5 rounded-2xl cursor-pointer transition-all duration-200 tap-feedback border-l-4
 						{selected
-							? 'bg-purple-50 border-l-purple-500 ring-2 ring-purple-300'
+							? 'bg-purple-500 border-l-purple-700 text-white'
 							: 'bg-white border-l-transparent ' + kategoriClass[ingrediens.kategori as Kategori]}"
 					onclick={() => ingredientsStore.toggleSelection(ingrediens, sessionCode)}
 				>
 					<div class="flex items-center flex-grow min-w-0">
 						<div
 							class="w-11 h-11 mr-3 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-colors
-								{selected ? 'bg-purple-100' : 'bg-gray-50'}"
+								{selected ? 'bg-purple-600' : 'bg-gray-50'}"
 						>
-							{kategoriIkon[ingrediens.kategori as Kategori] || '🍽️'}
+							{selected ? '✓' : (kategoriIkon[ingrediens.kategori as Kategori] || '🍽️')}
 						</div>
 						<div class="flex-grow min-w-0 text-left">
-							<div class="font-bold text-[16px] truncate text-gray-900">{ingrediens.namn}</div>
-							<div class="text-[14px] text-gray-500 font-semibold">{ingrediens.mengde} {ingrediens.eining}</div>
+							<div class="font-bold text-[16px] truncate {selected ? 'text-white' : 'text-gray-900'}">{ingrediens.namn}</div>
+							<div class="text-[14px] font-semibold {selected ? 'text-purple-200' : 'text-gray-500'}">{ingrediens.mengde} {ingrediens.eining}</div>
 						</div>
 					</div>
 					<div class="flex gap-1 flex-shrink-0 ml-2">
