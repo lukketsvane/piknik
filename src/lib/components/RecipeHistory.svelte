@@ -6,14 +6,23 @@
 	let {
 		isOpen,
 		onClose,
-		onSelectRecipe
+		onSelectRecipe,
+		sessionCode
 	}: {
 		isOpen: boolean
 		onClose: () => void
 		onSelectRecipe: (recipe: Oppskrift) => void
+		sessionCode: string
 	} = $props()
 
 	let selectedRecipe = $state<Oppskrift | null>(null)
+	let activeTab = $state<'session' | 'community'>('session')
+
+	let recipes = $derived(
+		activeTab === 'session'
+			? recipesStore.sessionRecipes
+			: recipesStore.recipeHistory
+	)
 
 	function formatIngredient(ingrediens: Ingrediens) {
 		return `${ingrediens.mengde} ${ingrediens.eining} ${ingrediens.namn}`
@@ -87,8 +96,26 @@
 				</button>
 			</div>
 
+			<!-- Tabs -->
+			{#if !selectedRecipe}
+				<div class="flex px-6 pt-3 gap-2">
+					<button
+						class="flex-1 py-2 rounded-xl text-[14px] font-bold transition-colors {activeTab === 'session' ? 'bg-purple-500 text-white' : 'bg-purple-50 text-purple-500'}"
+						onclick={() => (activeTab = 'session')}
+					>
+						Denne okta
+					</button>
+					<button
+						class="flex-1 py-2 rounded-xl text-[14px] font-bold transition-colors {activeTab === 'community' ? 'bg-purple-500 text-white' : 'bg-purple-50 text-purple-500'}"
+						onclick={() => (activeTab = 'community')}
+					>
+						Alle oppskrifter
+					</button>
+				</div>
+			{/if}
+
 			<!-- Content -->
-			<div class="px-6 py-4 overflow-y-auto" style="max-height: calc(85vh - 80px)">
+			<div class="px-6 py-4 overflow-y-auto" style="max-height: calc(85vh - {selectedRecipe ? '80px' : '130px'})">
 				{#if selectedRecipe}
 					<p class="text-sm text-purple-500 font-medium mb-2">
 						{getRelativeTime(selectedRecipe.dato)}
@@ -123,14 +150,16 @@
 					>
 						Bruk denne oppskrifta
 					</button>
-				{:else if recipesStore.recipeHistory.length === 0}
+				{:else if recipes.length === 0}
 					<div class="flex flex-col items-center justify-center py-10 gap-3">
 						<img src="/piknik/sleep-a.gif" alt="Ingen oppskrifter" class="w-48 h-48 object-contain mascot-float" />
-						<p class="text-[15px] font-medium text-gray-400">Ingen oppskrifter enno</p>
+						<p class="text-[15px] font-medium text-gray-400">
+							{activeTab === 'session' ? 'Ingen oppskrifter i denne okta' : 'Ingen oppskrifter enno'}
+						</p>
 					</div>
 				{:else}
 					<div class="space-y-2.5">
-						{#each recipesStore.recipeHistory as recipe, i}
+						{#each recipes as recipe, i}
 							<button
 								type="button"
 								class="w-full p-4 bg-white border-2 border-purple-100 rounded-2xl transition-all flex items-center gap-3 text-left tap-feedback ingredient-enter"

@@ -6,7 +6,41 @@ class RecipesStore {
 	oppskrift = $state<Oppskrift | null>(null)
 	blandar = $state(false)
 	recipeHistory = $state<Oppskrift[]>([])
+	sessionRecipes = $state<Oppskrift[]>([])
 	error = $state<string | null>(null)
+
+	async fetchSessionRecipes(sessionCode: string) {
+		try {
+			const { data: sessionData, error: sessionError } = await supabase
+				.from('sessions')
+				.select('id')
+				.eq('code', sessionCode)
+				.single()
+
+			if (sessionError) throw new Error(`Session lookup error: ${sessionError.message}`)
+
+			const { data, error } = await supabase
+				.from('recipes')
+				.select('*')
+				.eq('session_id', sessionData.id)
+				.order('created_at', { ascending: false })
+				.limit(50)
+
+			if (error) throw new Error(`Session recipe fetch error: ${error.message}`)
+
+			this.sessionRecipes = data.map((recipe: any) => ({
+				id: recipe.id,
+				tittel: recipe.title,
+				skildring: recipe.description,
+				ingrediensar: recipe.ingredients,
+				steg: recipe.steps,
+				dato: recipe.created_at,
+				sessionCode
+			}))
+		} catch (error) {
+			console.error('Error fetching session recipes:', error)
+		}
+	}
 
 	async fetchRecipeHistory() {
 		try {
@@ -99,6 +133,7 @@ class RecipesStore {
 
 			newOppskrift.id = savedRecipe.id
 			this.recipeHistory = [newOppskrift, ...this.recipeHistory].slice(0, 50)
+			this.sessionRecipes = [newOppskrift, ...this.sessionRecipes].slice(0, 50)
 
 			// Broadcast recipe
 			await supabase.channel(`room:${sessionCode}`).send({

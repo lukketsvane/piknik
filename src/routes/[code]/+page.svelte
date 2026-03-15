@@ -16,6 +16,8 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte'
 	import StepIndicator from '$lib/components/StepIndicator.svelte'
 	import MascotGuide from '$lib/components/MascotGuide.svelte'
+	import BottomBar from '$lib/components/BottomBar.svelte'
+	import RecipeHistory from '$lib/components/RecipeHistory.svelte'
 
 	let { data } = $props()
 
@@ -26,6 +28,7 @@
 	let qrCodeDataUrl = $state('')
 	let identifyingIngredient = $state(false)
 	let hasJoined = $state(false)
+	let showHistory = $state(false)
 
 	let cameraInput: HTMLInputElement
 
@@ -82,6 +85,7 @@
 			audioStore.init()
 			audioStore.playBackground()
 			recipesStore.fetchRecipeHistory()
+			recipesStore.fetchSessionRecipes(data.sessionCode)
 		}
 	})
 
@@ -249,7 +253,7 @@
 		</div>
 
 		<!-- Ingredients section — scrollable, bottom-aligned -->
-		<div class="px-5 pb-4 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
+		<div class="px-5 pb-16 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
 			<IngredientList sessionCode={data.sessionCode} />
 
 			{#if recipesStore.error}
@@ -273,6 +277,21 @@
 		onClose={() => {
 			ingredientsStore.visLeggTilIngrediens = false
 			ingredientsStore.redigeringIngrediens = null
+		}}
+		sessionCode={data.sessionCode}
+	/>
+
+	<BottomBar
+		onShowInfo={() => (showShareDialog = true)}
+		onShowHistory={() => (showHistory = true)}
+		onQuit={handleQuit}
+	/>
+
+	<RecipeHistory
+		isOpen={showHistory}
+		onClose={() => (showHistory = false)}
+		onSelectRecipe={(recipe) => {
+			recipesStore.oppskrift = recipe
 		}}
 		sessionCode={data.sessionCode}
 	/>

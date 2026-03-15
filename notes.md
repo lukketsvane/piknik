@@ -1,1 +1,0 @@
-we want complete refactor and building from bottom op making it on svelte, having native  like experience with impeccible ios mobile feel. pwa etc. and we want to migrate to use gemini googles models instead GEMINI_AI_KEY=AIzaSyAR5h7a7SK1Kk42ZPYQSOve4sJwnBip_2Y

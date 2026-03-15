@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS ingredients (
 
 CREATE TABLE IF NOT EXISTS recipes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  session_id UUID REFERENCES sessions(id) ON DELETE CASCADE NOT NULL,
+  session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT DEFAULT '',
   ingredients JSONB DEFAULT '[]',
