@@ -49,7 +49,7 @@
 		recipesStore.oppskrift ? 'happy-bounce-a' :
 		recipesStore.error ? 'walk-steam' :
 		ingredientsStore.ingrediensar.length === 0 ? 'sleep-b' :
-		ingredientsStore.valgteIngrediensar.length >= 2 ? 'flex-question' :
+		ingredientsStore.valgteIngrediensar.length >= 2 ? 'sleep-a' :
 		ingredientsStore.valgteIngrediensar.length === 1 ? 'idle-stand-a' :
 		'sleep-a'
 	)
@@ -60,10 +60,20 @@
 		recipesStore.oppskrift ? 'Klar!' :
 		recipesStore.error ? 'Oops!' :
 		ingredientsStore.ingrediensar.length === 0 ? 'Legg til!' :
-		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Bland?' :
+		ingredientsStore.valgteIngrediensar.length >= 2 ? 'Dobbelttrykk!' :
 		ingredientsStore.valgteIngrediensar.length === 1 ? 'Ein til!' :
 		'Vel 2+'
 	)
+
+	// Double-tap mascot to blend
+	let lastTap = $state(0)
+	function handleMascotTap() {
+		const now = Date.now()
+		if (now - lastTap < 400 && canBlend) {
+			handleBlend()
+		}
+		lastTap = now
+	}
 
 	// Generate QR code when share dialog opens
 	$effect(() => {
@@ -214,8 +224,10 @@
 			<StepIndicator {currentStep} />
 		</div>
 
-		<!-- Mascot Guide — fills middle area -->
-		<div class="flex-1 flex items-center justify-center min-h-0">
+		<!-- Mascot Guide — fills middle area, double-tap to blend -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="flex-1 flex items-center justify-center min-h-0 {canBlend ? 'cursor-pointer' : ''}" onclick={handleMascotTap}>
 			<MascotGuide
 				animation={mascotAnimation}
 				message={mascotMessage}
@@ -260,19 +272,6 @@
 			{/if}
 		</div>
 
-		<!-- Blend button — bottom of frame -->
-		<div class="px-5 py-3 flex-shrink-0 safe-bottom">
-			<button
-				onclick={handleBlend}
-				disabled={!canBlend}
-				class="w-full h-14 rounded-2xl text-white font-extrabold text-[19px] transition-all duration-300
-					{canBlend
-						? 'bg-piknik-gradient-warm active:scale-[0.97]'
-						: 'bg-gray-300 cursor-not-allowed'}"
-			>
-				{recipesStore.blandar ? 'Blandar...' : 'Bland!'}
-			</button>
-		</div>
 	</AppShell>
 
 	<!-- Overlays and modals -->
