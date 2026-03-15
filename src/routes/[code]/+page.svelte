@@ -29,6 +29,7 @@
 	let isAdvancedMode = $state(false)
 	let qrCodeDataUrl = $state('')
 	let identifyingIngredient = $state(false)
+	let hasJoined = $state(false)
 
 	let cameraInput: HTMLInputElement
 
@@ -80,16 +81,6 @@
 		}
 	})
 
-	// Auto-join when visiting a session URL directly
-	$effect(() => {
-		if (!sessionStore.sessionStarted && data.sessionCode) {
-			const name = generateUsername()
-			sessionStore.joinSession(name, data.sessionCode).then(() => {
-				ingredientsStore.init(data.sessionCode)
-			})
-		}
-	})
-
 	// Start audio and fetch recipe history when session starts
 	$effect(() => {
 		if (sessionStore.sessionStarted) {
@@ -111,6 +102,11 @@
 	onMount(async () => {
 		sessionStore.initFromCode(data.sessionCode)
 		if (sessionStore.sessionStarted) {
+			await ingredientsStore.init(data.sessionCode)
+		} else if (!hasJoined) {
+			hasJoined = true
+			const name = generateUsername()
+			await sessionStore.joinSession(name, data.sessionCode)
 			await ingredientsStore.init(data.sessionCode)
 		}
 	})
