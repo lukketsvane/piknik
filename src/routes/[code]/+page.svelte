@@ -8,7 +8,6 @@
 	import { audioStore } from '$lib/stores/audio.svelte'
 	import { cuisineOptions } from '$lib/data/cuisine-options'
 	import AppShell from '$lib/components/AppShell.svelte'
-	import BottomBar from '$lib/components/BottomBar.svelte'
 	import IngredientList from '$lib/components/IngredientList.svelte'
 	import AddIngredientDialog from '$lib/components/AddIngredientDialog.svelte'
 	import RecipeModal from '$lib/components/RecipeModal.svelte'
@@ -150,11 +149,11 @@
 {#if showJoinDialog && !sessionStore.sessionStarted}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="fixed inset-0 flex items-center justify-center z-50" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.95) 0%, rgba(147, 51, 234, 0.9) 100%);">
-		<div class="bg-white rounded-3xl p-7 w-full max-w-sm mx-4 shadow-2xl page-enter">
+		<div class="bg-white rounded-3xl p-7 w-full max-w-sm mx-4 page-enter">
 			<div class="flex flex-col items-center mb-5">
 				<img src="/piknik/walk-baguette-a.gif" alt="Velkomen" class="w-24 h-24 object-contain mascot-enter mb-2" />
-				<h2 class="text-xl font-bold text-gray-900">Bli med i okta</h2>
-				<p class="text-[13px] text-gray-500 mt-1">Nokon inviterte deg til a lage mat!</p>
+				<h2 class="text-2xl font-black text-gray-900">Bli med i okta</h2>
+				<p class="text-[15px] text-gray-500 mt-1 font-medium">Nokon inviterte deg til a lage mat!</p>
 			</div>
 			<input
 				type="text"
@@ -166,8 +165,8 @@
 			<button
 				onclick={handleJoinWithUsername}
 				disabled={!username}
-				class="w-full h-14 rounded-2xl text-white font-bold text-[17px] transition-all
-					{!username ? 'bg-gray-300 cursor-not-allowed' : 'bg-piknik-gradient shadow-xl shadow-purple-500/30 active:scale-[0.97]'}"
+				class="w-full h-14 rounded-2xl text-white font-extrabold text-[18px] transition-all
+					{!username ? 'bg-gray-300 cursor-not-allowed' : 'bg-piknik-gradient active:scale-[0.97]'}"
 			>
 				Bli med
 			</button>
@@ -179,11 +178,11 @@
 	<AppShell>
 		<div class="max-w-[390px] mx-auto page-enter">
 			<!-- Header -->
-			<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl" style="box-shadow: 0 4px 20px rgba(124, 58, 237, 0.06);">
+			<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl">
 				<div class="flex justify-between items-center">
 					<div class="flex items-center gap-2.5">
 						<img src="/piknik/idle-mushroom.gif" alt="PikNik" class="w-10 h-10 object-contain rounded-xl" />
-						<h1 class="text-[22px] font-extrabold text-purple-700 tracking-tight">PikNik!</h1>
+						<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
 					</div>
 					<div class="flex items-center gap-2">
 						<div class="flex -space-x-2">
@@ -192,7 +191,7 @@
 							{/each}
 						</div>
 						<button
-							class="flex items-center gap-1.5 pl-2.5 pr-3 py-2 rounded-full bg-white shadow-sm tap-feedback text-[13px] font-semibold text-purple-600"
+							class="flex items-center gap-1.5 pl-2.5 pr-3 py-2 rounded-full bg-white tap-feedback text-[14px] font-bold text-purple-600"
 							onclick={() => (showShareDialog = true)}
 						>
 							<Share2 class="w-3.5 h-3.5" />
@@ -216,10 +215,9 @@
 
 			<!-- Ingredients section -->
 			<div class="px-5">
-				<div class="flex justify-between items-center mb-3">
-					<h2 class="text-[20px] font-bold text-gray-900">Ingrediensar</h2>
+				<div class="flex justify-end mb-3">
 					<button
-						class="w-10 h-10 flex items-center justify-center rounded-2xl bg-piknik-gradient text-white shadow-lg shadow-purple-500/25 tap-feedback"
+						class="w-10 h-10 flex items-center justify-center rounded-2xl bg-piknik-gradient text-white tap-feedback"
 						onclick={() => (ingredientsStore.visLeggTilIngrediens = true)}
 					>
 						<Plus class="w-5 h-5" />
@@ -238,14 +236,14 @@
 		</div>
 
 		<!-- Blend button — fixed above bottom bar -->
-		<div class="fixed bottom-16 left-0 right-0 px-5 py-3 z-20 safe-bottom">
+		<div class="fixed bottom-0 left-0 right-0 px-5 py-4 z-20 safe-bottom">
 			<div class="max-w-[390px] mx-auto">
 				<button
 					onclick={handleBlend}
 					disabled={!canBlend}
-					class="w-full h-14 rounded-2xl text-white font-bold text-[17px] transition-all duration-300
+					class="w-full h-14 rounded-2xl text-white font-extrabold text-[19px] transition-all duration-300
 						{canBlend
-							? 'bg-piknik-gradient-warm shadow-xl shadow-purple-500/30 active:scale-[0.97] glow-pulse'
+							? 'bg-piknik-gradient-warm active:scale-[0.97]'
 							: 'bg-gray-300 cursor-not-allowed'}"
 				>
 					{recipesStore.blandar ? 'Blandar...' : `Bland! ${canBlend ? `(${ingredientsStore.valgteIngrediensar.length})` : ''}`}
@@ -291,7 +289,7 @@
 				<!-- Header with mascot -->
 				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
 					<img src="/piknik/walk-baguette-a.gif" alt="Del" class="w-12 h-12 object-contain" />
-					<h2 class="text-lg font-bold text-gray-900">Del okt</h2>
+					<h2 class="text-xl font-black text-gray-900">Del okt</h2>
 					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto" onclick={() => (showShareDialog = false)}>
 						✕
 					</button>
@@ -299,9 +297,9 @@
 
 				<div class="px-6 pb-6">
 					<!-- Session code -->
-					<div class="bg-purple-50 rounded-2xl p-4 mb-4 text-center border-2 border-purple-200">
-						<p class="text-4xl font-extrabold tracking-widest text-purple-700">{data.sessionCode}</p>
-						<p class="text-[13px] text-purple-500 mt-1 font-medium">Del denne koden</p>
+					<div class="bg-purple-50 rounded-2xl p-4 mb-4 text-center border-2 border-purple-300">
+						<p class="text-5xl font-black tracking-widest text-purple-700">{data.sessionCode}</p>
+						<p class="text-[14px] text-purple-500 mt-1 font-bold">Del denne koden</p>
 					</div>
 
 					{#if qrCodeDataUrl}
@@ -325,7 +323,7 @@
 
 					<!-- Settings section -->
 					<div class="border-t border-purple-100 pt-4">
-						<h3 class="text-[13px] font-bold uppercase tracking-wider text-purple-600 mb-3">Innstillingar</h3>
+						<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3">Innstillingar</h3>
 
 						<div class="mb-3">
 							<h4 class="text-sm font-medium mb-2 text-gray-700">Velg kjokken:</h4>
@@ -378,7 +376,7 @@
 					</div>
 
 					<button
-						class="w-full mt-4 py-3.5 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all"
+						class="w-full mt-4 py-3.5 rounded-2xl bg-red-500 text-white font-extrabold text-[16px] hover:bg-red-600 transition-all"
 						onclick={handleQuit}
 					>
 						Avslutt okt
@@ -402,17 +400,17 @@
 			>
 				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
 					<img src="/piknik/idle-stand-a.gif" alt="Info" class="w-12 h-12 object-contain" />
-					<h2 class="text-lg font-bold text-gray-900">Om PikNik</h2>
+					<h2 class="text-xl font-black text-gray-900">Om PikNik</h2>
 					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto transition-colors" onclick={() => (showInfo = false)}>
 						✕
 					</button>
 				</div>
 				<div class="px-6 pb-6">
-					<p class="text-[15px] text-gray-700 mb-4 leading-relaxed">
+					<p class="text-[16px] text-gray-700 mb-4 leading-relaxed font-medium">
 						PikNik er ein interaktiv matlagingsapp der brukarar kan samarbeide i sanntid for a lage
 						kreative oppskrifter basert pa ingrediensane dei har.
 					</p>
-					<h3 class="text-[13px] font-bold uppercase tracking-wider text-purple-600 mb-3">Slik brukar du PikNik</h3>
+					<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3">Slik brukar du PikNik</h3>
 					<ol class="space-y-2.5">
 						{#each ['Legg til ingrediensar du har tilgjengeleg', 'Vel ingrediensane du vil bruke', 'Trykk pa "Bland!" for a generere oppskrift', 'Del oppskrifta med vennene dine'] as step, i}
 							<li class="flex gap-3">
@@ -428,9 +426,4 @@
 		</div>
 	{/if}
 
-	<BottomBar
-		onShowInfo={() => (showInfo = true)}
-		onShowHistory={() => (showRecipeHistory = true)}
-		onQuit={handleQuit}
-	/>
 {/if}

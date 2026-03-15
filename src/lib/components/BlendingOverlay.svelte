@@ -42,12 +42,12 @@
 				<img
 					src="/piknik/{currentPhase.animation}.gif"
 					alt="Blandar..."
-					class="w-48 h-48 object-contain mascot-enter drop-shadow-2xl"
+					class="w-72 h-72 object-contain mascot-enter"
 				/>
 			{/key}
 
 			<div class="text-center">
-				<p class="text-white font-bold text-xl mb-2">{currentPhase.message}</p>
+				<p class="text-white font-black text-2xl mb-2">{currentPhase.message}</p>
 				<div class="flex items-center justify-center gap-1.5">
 					{#each phases as _, i}
 						<div class="w-2 h-2 rounded-full transition-all duration-300

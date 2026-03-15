@@ -16,7 +16,7 @@
 </script>
 
 <div class="fixed bottom-0 left-0 right-0 z-30">
-	<div class="bg-white/70 backdrop-blur-2xl safe-bottom" style="box-shadow: 0 -1px 20px rgba(124, 58, 237, 0.08);">
+	<div class="bg-white/70 backdrop-blur-2xl safe-bottom">
 		<div class="max-w-[390px] mx-auto flex items-center justify-around py-2 px-2">
 			<button
 				class="flex flex-col items-center gap-0.5 py-1 px-4 rounded-2xl tap-feedback"

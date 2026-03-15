@@ -10,9 +10,9 @@
 	} = $props()
 
 	const sizeClasses: Record<string, string> = {
-		sm: 'w-20 h-20',
-		md: 'w-32 h-32',
-		lg: 'w-44 h-44'
+		sm: 'w-40 h-40',
+		md: 'w-64 h-64',
+		lg: 'w-80 h-80'
 	}
 
 	let fadeKey = $state(0)
@@ -29,7 +29,7 @@
 <div class="flex flex-col items-center gap-2">
 	{#if message}
 		<div class="speech-bubble">
-			<p class="text-[13px] font-medium text-purple-800 text-center whitespace-nowrap">{message}</p>
+			<p class="text-[15px] font-bold text-purple-800 text-center whitespace-nowrap">{message}</p>
 		</div>
 	{/if}
 

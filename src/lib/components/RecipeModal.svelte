@@ -25,11 +25,11 @@
 				<img
 					src="/piknik/happy-bounce-a.gif"
 					alt="Glad maskot"
-					class="w-20 h-20 object-contain mascot-enter"
+					class="w-28 h-28 object-contain mascot-enter"
 				/>
 				<div class="flex-1 min-w-0 pb-1">
-					<p class="text-purple-200 text-[11px] font-semibold uppercase tracking-wider mb-1">Oppskrift klar!</p>
-					<h2 class="text-xl font-bold text-white truncate">{oppskrift.tittel}</h2>
+					<p class="text-purple-200 text-[12px] font-bold uppercase tracking-wider mb-1">Oppskrift klar!</p>
+					<h2 class="text-2xl font-black text-white truncate">{oppskrift.tittel}</h2>
 				</div>
 			</div>
 		</div>
@@ -41,26 +41,26 @@
 
 		<!-- Content -->
 		<div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 180px)">
-			<p class="text-gray-600 text-[15px] mb-6 stagger-in" style="animation-delay: 100ms">{oppskrift.skildring}</p>
+			<p class="text-gray-600 text-[16px] font-medium mb-6 stagger-in" style="animation-delay: 100ms">{oppskrift.skildring}</p>
 
-			<h3 class="text-[13px] font-bold uppercase tracking-wider text-purple-600 mb-3 stagger-in" style="animation-delay: 200ms">Ingrediensar</h3>
+			<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3 stagger-in" style="animation-delay: 200ms">Ingrediensar</h3>
 			<div class="grid grid-cols-2 gap-2 mb-6 stagger-in" style="animation-delay: 300ms">
 				{#each oppskrift.ingrediensar as ing}
 					<div class="bg-purple-50 rounded-xl p-3 flex flex-col">
-						<span class="text-[14px] font-medium text-gray-900">{ing.namn}</span>
-						<span class="text-[12px] text-purple-500 font-medium">{ing.mengde} {ing.eining}</span>
+						<span class="text-[15px] font-bold text-gray-900">{ing.namn}</span>
+						<span class="text-[13px] text-purple-500 font-semibold">{ing.mengde} {ing.eining}</span>
 					</div>
 				{/each}
 			</div>
 
-			<h3 class="text-[13px] font-bold uppercase tracking-wider text-purple-600 mb-3 stagger-in" style="animation-delay: 400ms">Framgangsmåte</h3>
+			<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3 stagger-in" style="animation-delay: 400ms">Framgangsmåte</h3>
 			<ol class="space-y-4 pb-6 stagger-in" style="animation-delay: 500ms">
 				{#each oppskrift.steg as steg, index}
 					<li class="flex gap-3">
-						<div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white text-sm font-bold flex items-center justify-center shadow-md shadow-purple-500/20">
+						<div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500 text-white text-sm font-extrabold flex items-center justify-center">
 							{index + 1}
 						</div>
-						<span class="text-[15px] leading-relaxed text-gray-700 pt-1">{steg}</span>
+						<span class="text-[16px] leading-relaxed text-gray-700 font-medium pt-1">{steg}</span>
 					</li>
 				{/each}
 			</ol>

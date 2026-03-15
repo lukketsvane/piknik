@@ -21,7 +21,7 @@
 
 		<div class="flex flex-col items-center gap-1">
 			<div
-				class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300
+				class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold transition-all duration-300
 					{isCompleted ? 'bg-purple-500 text-white step-complete' : ''}
 					{isActive ? 'bg-purple-500 text-white ring-4 ring-purple-200' : ''}
 					{isFuture ? 'bg-purple-100 text-purple-400' : ''}"
@@ -34,7 +34,7 @@
 					{stepNum}
 				{/if}
 			</div>
-			<span class="text-[11px] font-semibold tracking-wide
+			<span class="text-[12px] font-bold tracking-wide
 				{isActive ? 'text-purple-700' : ''}
 				{isCompleted ? 'text-purple-500' : ''}
 				{isFuture ? 'text-gray-400' : ''}"

@@ -35,9 +35,9 @@
 		<img
 			src="/piknik/sleep-b.gif"
 			alt="Sovande maskot"
-			class="w-32 h-32 object-contain mascot-float"
+			class="w-48 h-48 object-contain mascot-float"
 		/>
-		<p class="text-[15px] font-medium text-gray-400">Legg til ingrediensar!</p>
+		<p class="text-[17px] font-bold text-gray-400">Legg til ingrediensar!</p>
 	</div>
 {:else}
 	<ul class="space-y-2.5">
@@ -49,8 +49,8 @@
 				<div
 					class="w-full flex items-center p-3.5 rounded-2xl cursor-pointer transition-all duration-200 tap-feedback border-l-4
 						{selected
-							? 'bg-purple-50 border-l-purple-500 shadow-lg shadow-purple-200/40 ring-1 ring-purple-200'
-							: 'bg-white border-l-transparent shadow-sm hover:shadow-md ' + kategoriClass[ingrediens.kategori as Kategori]}"
+							? 'bg-purple-50 border-l-purple-500 ring-2 ring-purple-300'
+							: 'bg-white border-l-transparent ' + kategoriClass[ingrediens.kategori as Kategori]}"
 					onclick={() => ingredientsStore.toggleSelection(ingrediens, sessionCode)}
 				>
 					<div class="flex items-center flex-grow min-w-0">
@@ -61,8 +61,8 @@
 							{kategoriIkon[ingrediens.kategori as Kategori] || '🍽️'}
 						</div>
 						<div class="flex-grow min-w-0 text-left">
-							<div class="font-semibold text-[15px] truncate text-gray-900">{ingrediens.namn}</div>
-							<div class="text-[13px] text-gray-500 font-medium">{ingrediens.mengde} {ingrediens.eining}</div>
+							<div class="font-bold text-[16px] truncate text-gray-900">{ingrediens.namn}</div>
+							<div class="text-[14px] text-gray-500 font-semibold">{ingrediens.mengde} {ingrediens.eining}</div>
 						</div>
 					</div>
 					<div class="flex gap-1 flex-shrink-0 ml-2">
