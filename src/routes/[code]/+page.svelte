@@ -194,92 +194,88 @@
 
 {#if sessionStore.sessionStarted}
 	<AppShell>
-		<div class="flex flex-col h-full max-w-[390px] mx-auto page-enter">
-			<!-- Header -->
-			<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl flex-shrink-0">
-				<div class="flex justify-between items-center">
-					<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
-					<div class="flex items-center gap-2">
-						<div class="flex -space-x-2">
-							{#each sessionStore.participants as participant (participant.id)}
-								<UserAvatar name={participant.namn} color={participant.farge} />
-							{/each}
-						</div>
-						<button
-							class="flex items-center gap-1.5 pl-2.5 pr-3 py-2 rounded-full bg-white tap-feedback text-[14px] font-bold text-purple-600"
-							onclick={() => (showShareDialog = true)}
-						>
-							<Share2 class="w-3.5 h-3.5" />
-							Del
-						</button>
+		<!-- Header -->
+		<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl flex-shrink-0">
+			<div class="flex justify-between items-center">
+				<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
+				<div class="flex items-center gap-2">
+					<div class="flex -space-x-2">
+						{#each sessionStore.participants as participant (participant.id)}
+							<UserAvatar name={participant.namn} color={participant.farge} />
+						{/each}
 					</div>
+					<button
+						class="flex items-center gap-1.5 pl-2.5 pr-3 py-2 rounded-full bg-white tap-feedback text-[14px] font-bold text-purple-600"
+						onclick={() => (showShareDialog = true)}
+					>
+						<Share2 class="w-3.5 h-3.5" />
+						Del
+					</button>
 				</div>
-
-				<!-- Step Indicator -->
-				<StepIndicator {currentStep} />
 			</div>
 
-			<!-- Mascot Guide — fills middle area -->
-			<div class="flex-1 flex items-center justify-center min-h-0">
-				<MascotGuide
-					animation={mascotAnimation}
-					message={mascotMessage}
-					size="sm"
-				/>
-			</div>
-
-			<!-- FAB buttons — floating above ingredient list -->
-			<div class="flex justify-end gap-2 px-5 mb-2 flex-shrink-0">
-				<input
-					type="file"
-					accept="image/*"
-					capture="environment"
-					class="hidden"
-					bind:this={cameraInput}
-					onchange={handleCameraCapture}
-				/>
-				<button
-					class="w-12 h-12 flex items-center justify-center rounded-2xl text-white tap-feedback transition-all
-						{identifyingIngredient ? 'bg-orange-500 animate-gentle-pulse' : 'bg-orange-500'}"
-					onclick={() => cameraInput.click()}
-					disabled={identifyingIngredient}
-				>
-					<Camera class="w-5 h-5" />
-				</button>
-				<button
-					class="w-12 h-12 flex items-center justify-center rounded-2xl bg-piknik-gradient text-white tap-feedback"
-					onclick={() => (ingredientsStore.visLeggTilIngrediens = true)}
-				>
-					<Plus class="w-5 h-5" />
-				</button>
-			</div>
-
-			<!-- Ingredients section — bottom-aligned -->
-			<div class="px-5 pb-20 flex-shrink-0 max-h-[45%] overflow-y-auto scroll-area">
-				<IngredientList sessionCode={data.sessionCode} />
-
-				{#if recipesStore.error}
-					<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-[14px] font-semibold text-red-600 flex items-center gap-2">
-						{recipesStore.error}
-					</div>
-				{/if}
-			</div>
+			<!-- Step Indicator -->
+			<StepIndicator {currentStep} />
 		</div>
 
-		<!-- Blend button — fixed at bottom -->
-		<div class="fixed bottom-0 left-0 right-0 px-5 py-4 z-20 safe-bottom">
-			<div class="max-w-[390px] mx-auto">
-				<button
-					onclick={handleBlend}
-					disabled={!canBlend}
-					class="w-full h-14 rounded-2xl text-white font-extrabold text-[19px] transition-all duration-300
-						{canBlend
-							? 'bg-piknik-gradient-warm active:scale-[0.97]'
-							: 'bg-gray-300 cursor-not-allowed'}"
-				>
-					{recipesStore.blandar ? 'Blandar...' : `Bland! ${canBlend ? `(${ingredientsStore.valgteIngrediensar.length})` : ''}`}
-				</button>
-			</div>
+		<!-- Mascot Guide — fills middle area -->
+		<div class="flex-1 flex items-center justify-center min-h-0">
+			<MascotGuide
+				animation={mascotAnimation}
+				message={mascotMessage}
+				size="sm"
+			/>
+		</div>
+
+		<!-- FAB buttons — floating above ingredient list -->
+		<div class="flex justify-end gap-2 px-5 mb-2 flex-shrink-0">
+			<input
+				type="file"
+				accept="image/*"
+				capture="environment"
+				class="hidden"
+				bind:this={cameraInput}
+				onchange={handleCameraCapture}
+			/>
+			<button
+				class="w-12 h-12 flex items-center justify-center rounded-2xl text-white tap-feedback transition-all
+					{identifyingIngredient ? 'bg-orange-500 animate-gentle-pulse' : 'bg-orange-500'}"
+				onclick={() => cameraInput.click()}
+				disabled={identifyingIngredient}
+			>
+				<Camera class="w-5 h-5" />
+			</button>
+			<button
+				class="w-12 h-12 flex items-center justify-center rounded-2xl bg-piknik-gradient text-white tap-feedback"
+				onclick={() => (ingredientsStore.visLeggTilIngrediens = true)}
+			>
+				<Plus class="w-5 h-5" />
+			</button>
+		</div>
+
+		<!-- Ingredients section — scrollable, bottom-aligned -->
+		<div class="px-5 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
+			<IngredientList sessionCode={data.sessionCode} />
+
+			{#if recipesStore.error}
+				<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-[14px] font-semibold text-red-600 flex items-center gap-2">
+					{recipesStore.error}
+				</div>
+			{/if}
+		</div>
+
+		<!-- Blend button — bottom of frame -->
+		<div class="px-5 py-3 flex-shrink-0 safe-bottom">
+			<button
+				onclick={handleBlend}
+				disabled={!canBlend}
+				class="w-full h-14 rounded-2xl text-white font-extrabold text-[19px] transition-all duration-300
+					{canBlend
+						? 'bg-piknik-gradient-warm active:scale-[0.97]'
+						: 'bg-gray-300 cursor-not-allowed'}"
+			>
+				{recipesStore.blandar ? 'Blandar...' : `Bland! ${canBlend ? `(${ingredientsStore.valgteIngrediensar.length})` : ''}`}
+			</button>
 		</div>
 	</AppShell>
 
