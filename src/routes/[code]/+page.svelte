@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte'
-	import { Share2, Plus, Camera } from 'lucide-svelte'
+	import { Plus, Camera } from 'lucide-svelte'
 	import * as QRCode from 'qrcode'
 	import { sessionStore } from '$lib/stores/session.svelte'
 	import { ingredientsStore } from '$lib/stores/ingredients.svelte'
@@ -197,20 +197,16 @@
 		<!-- Header -->
 		<div class="px-5 pt-4 pb-2 bg-purple-50/80 rounded-b-3xl flex-shrink-0">
 			<div class="flex justify-between items-center">
-				<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
-				<div class="flex items-center gap-2">
-					<div class="flex -space-x-2">
-						{#each sessionStore.participants as participant (participant.id)}
-							<UserAvatar name={participant.namn} color={participant.farge} />
-						{/each}
-					</div>
-					<button
-						class="flex items-center gap-1.5 pl-2.5 pr-3 py-2 rounded-full bg-white tap-feedback text-[14px] font-bold text-purple-600"
-						onclick={() => (showShareDialog = true)}
-					>
-						<Share2 class="w-3.5 h-3.5" />
-						Del
-					</button>
+				<button
+					class="tap-feedback"
+					onclick={() => (showShareDialog = true)}
+				>
+					<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
+				</button>
+				<div class="flex -space-x-2">
+					{#each sessionStore.participants as participant (participant.id)}
+						<UserAvatar name={participant.namn} color={participant.farge} />
+					{/each}
 				</div>
 			</div>
 
