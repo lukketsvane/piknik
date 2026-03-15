@@ -45,7 +45,7 @@
 		recipesStore.oppskrift ? 'happy-bounce-a' :
 		recipesStore.error ? 'walk-steam' :
 		ingredientsStore.valgteIngrediensar.length >= 2 ? 'flex-question' :
-		'sleep-loop'
+		'sleep-a'
 	)
 
 	let mascotMessage = $derived(
