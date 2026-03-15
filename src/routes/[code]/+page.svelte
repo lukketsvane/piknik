@@ -12,18 +12,14 @@
 	import IngredientList from '$lib/components/IngredientList.svelte'
 	import AddIngredientDialog from '$lib/components/AddIngredientDialog.svelte'
 	import RecipeModal from '$lib/components/RecipeModal.svelte'
-	import RecipeHistory from '$lib/components/RecipeHistory.svelte'
 	import BlendingOverlay from '$lib/components/BlendingOverlay.svelte'
 	import UserAvatar from '$lib/components/UserAvatar.svelte'
 	import StepIndicator from '$lib/components/StepIndicator.svelte'
 	import MascotGuide from '$lib/components/MascotGuide.svelte'
-	import type { Oppskrift } from '$lib/types'
 
 	let { data } = $props()
 
 	let showShareDialog = $state(false)
-	let showInfo = $state(false)
-	let showRecipeHistory = $state(false)
 	let selectedCuisines = $state<string[]>([])
 	let isChildFriendly = $state(false)
 	let isAdvancedMode = $state(false)
@@ -35,10 +31,9 @@
 
 	const shareUrl = $derived(`https://piknik.iverfinne.no/${data.sessionCode}`)
 
-	// Step tracking
+	// Step tracking — simplified
 	let currentStep = $derived(
 		recipesStore.oppskrift ? 3 :
-		recipesStore.blandar ? 2 :
 		ingredientsStore.valgteIngrediensar.length >= 2 ? 2 :
 		1
 	)
@@ -273,12 +268,6 @@
 		<RecipeModal oppskrift={recipesStore.oppskrift} onClose={() => recipesStore.clearRecipe()} />
 	{/if}
 
-	<RecipeHistory
-		isOpen={showRecipeHistory}
-		onClose={() => (showRecipeHistory = false)}
-		onSelectRecipe={(recipe: Oppskrift) => (recipesStore.oppskrift = recipe)}
-	/>
-
 	<AddIngredientDialog
 		isOpen={ingredientsStore.visLeggTilIngrediens}
 		onClose={() => {
@@ -386,45 +375,6 @@
 					>
 						Avslutt okt
 					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Info dialog -->
-	{#if showInfo}
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
-			class="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 blend-overlay"
-			onkeydown={(e) => e.key === 'Escape' && (showInfo = false)}
-		>
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<div class="absolute inset-0" onclick={() => (showInfo = false)}></div>
-			<div
-				class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl bottom-sheet-enter safe-bottom overflow-hidden"
-			>
-				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
-					<h2 class="text-xl font-black text-gray-900">Om PikNik</h2>
-					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto transition-colors" onclick={() => (showInfo = false)}>
-						✕
-					</button>
-				</div>
-				<div class="px-6 pb-6">
-					<p class="text-[16px] text-gray-700 mb-4 leading-relaxed font-medium">
-						PikNik er ein interaktiv matlagingsapp der brukarar kan samarbeide i sanntid for a lage
-						kreative oppskrifter basert pa ingrediensane dei har.
-					</p>
-					<h3 class="text-[14px] font-black uppercase tracking-wider text-purple-600 mb-3">Slik brukar du PikNik</h3>
-					<ol class="space-y-2.5">
-						{#each ['Legg til ingrediensar du har tilgjengeleg', 'Vel ingrediensane du vil bruke', 'Trykk pa "Bland!" for a generere oppskrift', 'Del oppskrifta med vennene dine'] as step, i}
-							<li class="flex gap-3">
-								<span class="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center">
-									{i + 1}
-								</span>
-								<span class="text-[15px] leading-relaxed pt-0.5 font-medium text-gray-700">{step}</span>
-							</li>
-						{/each}
-					</ol>
 				</div>
 			</div>
 		</div>

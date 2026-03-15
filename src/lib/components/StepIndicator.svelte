@@ -2,9 +2,9 @@
 	let { currentStep }: { currentStep: number } = $props()
 
 	const steps = [
-		{ label: 'Vel ingrediensar', shortLabel: 'Vel' },
-		{ label: 'Bland!', shortLabel: 'Bland' },
-		{ label: 'Oppskrift', shortLabel: 'Resultat' }
+		{ label: 'Legg til', shortLabel: 'Legg til' },
+		{ label: 'Vel', shortLabel: 'Vel' },
+		{ label: 'Kok', shortLabel: 'Kok' }
 	]
 </script>
 

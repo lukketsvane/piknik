@@ -33,7 +33,7 @@
 {#if ingredientsStore.ingrediensar.length === 0}
 	<!-- Empty state — mascot is already shown above by MascotGuide -->
 {:else}
-	<ul class="space-y-2.5">
+	<ul class="space-y-2">
 		{#each ingredientsStore.ingrediensar as ingrediens, index (ingrediens.id)}
 			{@const selected = isSelected(ingrediens)}
 			<li class="ingredient-enter" style="animation-delay: {index * 50}ms">
