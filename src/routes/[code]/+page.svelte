@@ -78,7 +78,7 @@
 	// Generate QR code when share dialog opens
 	$effect(() => {
 		if (showShareDialog) {
-			QRCode.toDataURL(shareUrl, { width: 200, margin: 2 }).then((url: string) => {
+			QRCode.toDataURL(shareUrl, { width: 300, margin: 2 }).then((url: string) => {
 				qrCodeDataUrl = url
 			})
 		}
@@ -308,26 +308,22 @@
 			<div
 				class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl bottom-sheet-enter safe-bottom overflow-hidden"
 			>
-				<!-- Header -->
-				<div class="flex items-center gap-3 px-6 pt-5 pb-3">
-					<h2 class="text-xl font-black text-gray-900">Del</h2>
+				<div class="flex items-center px-6 pt-5 pb-3">
 					<button class="p-2 rounded-full hover:bg-purple-50 ml-auto" onclick={() => (showShareDialog = false)}>
 						✕
 					</button>
 				</div>
 
 				<div class="px-6 pb-6">
-					<div class="bg-purple-50 rounded-2xl p-4 mb-4 text-center border-2 border-purple-300">
-						<p class="text-5xl font-black tracking-widest text-purple-700">{data.sessionCode}</p>
-					</div>
-
 					{#if qrCodeDataUrl}
-						<div class="flex justify-center mb-4">
-							<div class="border-2 border-purple-200 rounded-2xl p-2">
-								<img src={qrCodeDataUrl} alt="QR-kode" class="rounded-xl" />
+						<div class="flex justify-center mb-3">
+							<div class="border-2 border-purple-200 rounded-2xl p-3">
+								<img src={qrCodeDataUrl} alt="QR-kode" class="rounded-xl w-56 h-56" />
 							</div>
 						</div>
 					{/if}
+
+					<p class="text-center text-[15px] font-bold tracking-[0.3em] text-purple-400 mb-3">{data.sessionCode}</p>
 
 					<p class="text-center mb-5">
 						<a
