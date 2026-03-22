@@ -16,8 +16,7 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte'
 	import StepIndicator from '$lib/components/StepIndicator.svelte'
 	import MascotGuide from '$lib/components/MascotGuide.svelte'
-	import BottomBar from '$lib/components/BottomBar.svelte'
-	import RecipeHistory from '$lib/components/RecipeHistory.svelte'
+import RecipeHistory from '$lib/components/RecipeHistory.svelte'
 
 	let { data } = $props()
 
@@ -253,7 +252,7 @@
 		</div>
 
 		<!-- Ingredients section — scrollable, bottom-aligned -->
-		<div class="px-5 pb-16 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
+		<div class="px-5 pb-5 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
 			<IngredientList sessionCode={data.sessionCode} />
 
 			{#if recipesStore.error}
@@ -281,11 +280,6 @@
 		sessionCode={data.sessionCode}
 	/>
 
-	<BottomBar
-		onShowInfo={() => (showShareDialog = true)}
-		onShowHistory={() => (showHistory = true)}
-		onQuit={handleQuit}
-	/>
 
 	<RecipeHistory
 		isOpen={showHistory}
