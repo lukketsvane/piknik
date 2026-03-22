@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte'
-	import { Plus, Camera } from 'lucide-svelte'
+	import { Plus, Camera, Trophy, Volume2, VolumeX } from 'lucide-svelte'
 	import * as QRCode from 'qrcode'
 	import { sessionStore } from '$lib/stores/session.svelte'
 	import { ingredientsStore } from '$lib/stores/ingredients.svelte'
@@ -16,7 +16,6 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte'
 	import StepIndicator from '$lib/components/StepIndicator.svelte'
 	import MascotGuide from '$lib/components/MascotGuide.svelte'
-	import BottomBar from '$lib/components/BottomBar.svelte'
 	import RecipeHistory from '$lib/components/RecipeHistory.svelte'
 
 	let { data } = $props()
@@ -30,7 +29,7 @@
 	let hasJoined = $state(false)
 	let showHistory = $state(false)
 
-	let cameraInput: HTMLInputElement
+	let cameraInput = $state<HTMLInputElement | undefined>()
 
 	const shareUrl = $derived(`https://piknik.iverfinne.no/${data.sessionCode}`)
 
@@ -204,10 +203,30 @@
 				>
 					<h1 class="text-[26px] font-black text-purple-700 tracking-tight">PikNik!</h1>
 				</button>
-				<div class="flex -space-x-2">
-					{#each sessionStore.participants as participant (participant.id)}
-						<UserAvatar name={participant.namn} color={participant.farge} />
-					{/each}
+				<div class="flex items-center gap-2">
+					<button
+						class="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/90 text-purple-600 shadow-sm tap-feedback"
+						aria-label={audioStore.isMuted ? 'Slå på lyd' : 'Slå av lyd'}
+						onclick={() => audioStore.toggleMute()}
+					>
+						{#if audioStore.isMuted}
+							<VolumeX class="w-5 h-5" />
+						{:else}
+							<Volume2 class="w-5 h-5" />
+						{/if}
+					</button>
+					<button
+						class="w-10 h-10 flex items-center justify-center rounded-2xl bg-white/90 text-purple-600 shadow-sm tap-feedback"
+						aria-label="Vis historikk"
+						onclick={() => (showHistory = true)}
+					>
+						<Trophy class="w-5 h-5" />
+					</button>
+					<div class="flex -space-x-2">
+						{#each sessionStore.participants as participant (participant.id)}
+							<UserAvatar name={participant.namn} color={participant.farge} />
+						{/each}
+					</div>
 				</div>
 			</div>
 
@@ -239,7 +258,7 @@
 			<button
 				class="w-12 h-12 flex items-center justify-center rounded-2xl text-white tap-feedback transition-all
 					{identifyingIngredient ? 'bg-orange-500 animate-gentle-pulse' : 'bg-orange-500'}"
-				onclick={() => cameraInput.click()}
+				onclick={() => cameraInput?.click()}
 				disabled={identifyingIngredient}
 			>
 				<Camera class="w-5 h-5" />
@@ -253,7 +272,7 @@
 		</div>
 
 		<!-- Ingredients section — scrollable, bottom-aligned -->
-		<div class="px-5 pb-16 flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
+		<div class="px-5 pb-5 safe-bottom flex-shrink-0 max-h-[40%] overflow-y-auto scroll-area">
 			<IngredientList sessionCode={data.sessionCode} />
 
 			{#if recipesStore.error}
@@ -279,12 +298,6 @@
 			ingredientsStore.redigeringIngrediens = null
 		}}
 		sessionCode={data.sessionCode}
-	/>
-
-	<BottomBar
-		onShowInfo={() => (showShareDialog = true)}
-		onShowHistory={() => (showHistory = true)}
-		onQuit={handleQuit}
 	/>
 
 	<RecipeHistory
