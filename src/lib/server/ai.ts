@@ -45,6 +45,10 @@ async function generateWithOpenAI({ prompt, imageDataUrl }: GenerateTextOptions)
 		throw new Error('OPENAI_API_KEY is not configured')
 	}
 
+	if (!/\bjson\b/i.test(prompt)) {
+		throw new Error('OpenAI JSON mode requires the prompt to request JSON output')
+	}
+
 	const content = imageDataUrl
 		? [
 				{ type: 'text', text: prompt },
