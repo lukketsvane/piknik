@@ -1,9 +1,6 @@
 import { json, error } from '@sveltejs/kit'
-import { GEMINI_API_KEY } from '$env/static/private'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { RequestHandler } from './$types'
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+import { generateAIText } from '$lib/server/ai'
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { image } = await request.json()
@@ -11,8 +8,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!image) {
 		error(400, 'Image is required')
 	}
-
-	const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 	const prompt = `Du ser eit bilete av ein matingrediens. Identifiser ingrediensen og estimer mengda.
 
@@ -33,19 +28,7 @@ Vel den eininga som er mest naturleg for ingrediensen. Til dømes:
 Svar BERRE med JSON, ingen annan tekst.`
 
 	try {
-		const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
-
-		const result = await model.generateContent([
-			prompt,
-			{
-				inlineData: {
-					mimeType: 'image/jpeg',
-					data: base64Data
-				}
-			}
-		])
-
-		const responseText = result.response.text()
+		const responseText = await generateAIText({ prompt, imageDataUrl: image })
 		const cleanedText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 		const ingredient = JSON.parse(cleanedText)
 

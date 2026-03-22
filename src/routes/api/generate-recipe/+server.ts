@@ -1,9 +1,6 @@
 import { json, error } from '@sveltejs/kit'
-import { GEMINI_API_KEY } from '$env/static/private'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { RequestHandler } from './$types'
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+import { generateAIText } from '$lib/server/ai'
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { ingrediensListe, selectedCuisines, isChildFriendly, isAdvancedMode } =
@@ -50,12 +47,10 @@ Svar BERRE med gyldig JSON i dette formatet, utan noko anna tekst:
     "Andre steg i framgangsmåten"
   ],
   "dato": "${new Date().toISOString()}"
-}`
+	}`
 
 	try {
-		const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
-		const result = await model.generateContent(prompt)
-		const text = result.response.text()
+		const text = await generateAIText({ prompt })
 
 		let jsonText = text
 		const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
@@ -66,7 +61,7 @@ Svar BERRE med gyldig JSON i dette formatet, utan noko anna tekst:
 		const oppskrift = JSON.parse(jsonText)
 		return json(oppskrift)
 	} catch (e) {
-		console.error('Gemini API error:', e)
+		console.error('AI recipe generation error:', e)
 		error(500, `Kunne ikkje generere oppskrift: ${(e as Error).message}`)
 	}
 }
