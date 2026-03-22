@@ -16,7 +16,6 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte'
 	import StepIndicator from '$lib/components/StepIndicator.svelte'
 	import MascotGuide from '$lib/components/MascotGuide.svelte'
-	import BottomBar from '$lib/components/BottomBar.svelte'
 	import RecipeHistory from '$lib/components/RecipeHistory.svelte'
 
 	let { data } = $props()
@@ -279,12 +278,6 @@
 			ingredientsStore.redigeringIngrediens = null
 		}}
 		sessionCode={data.sessionCode}
-	/>
-
-	<BottomBar
-		onShowInfo={() => (showShareDialog = true)}
-		onShowHistory={() => (showHistory = true)}
-		onQuit={handleQuit}
 	/>
 
 	<RecipeHistory

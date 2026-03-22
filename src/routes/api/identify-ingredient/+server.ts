@@ -1,9 +1,9 @@
 import { json, error } from '@sveltejs/kit'
-import { GEMINI_API_KEY } from '$env/static/private'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { OPENAI_API_KEY } from '$env/static/private'
+import OpenAI from 'openai'
 import type { RequestHandler } from './$types'
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY })
 
 export const POST: RequestHandler = async ({ request }) => {
 	const { image } = await request.json()
@@ -11,8 +11,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!image) {
 		error(400, 'Image is required')
 	}
-
-	const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 	const prompt = `Du ser eit bilete av ein matingrediens. Identifiser ingrediensen og estimer mengda.
 
@@ -35,17 +33,34 @@ Svar BERRE med JSON, ingen annan tekst.`
 	try {
 		const base64Data = image.replace(/^data:image\/\w+;base64,/, '')
 
-		const result = await model.generateContent([
-			prompt,
-			{
-				inlineData: {
-					mimeType: 'image/jpeg',
-					data: base64Data
+		const result = await openai.chat.completions.create({
+			model: 'gpt-4o-mini',
+			messages: [
+				{
+					role: 'system',
+					content:
+						'Du er ein ekspert på matingrediensar. Svar alltid med gyldig JSON basert på biletet og instruksjonane.'
+				},
+				{
+					role: 'user',
+					content: [
+						{ type: 'text', text: prompt },
+						{
+							type: 'image_url',
+							image_url: {
+								url: `data:image/jpeg;base64,${base64Data}`
+							}
+						}
+					]
 				}
-			}
-		])
+			],
+			temperature: 0
+		})
 
-		const responseText = result.response.text()
+		const responseText = result.choices[0]?.message?.content ?? ''
+		if (!responseText) {
+			error(500, 'Fekk ikkje svar frå modellen')
+		}
 		const cleanedText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 		const ingredient = JSON.parse(cleanedText)
 
