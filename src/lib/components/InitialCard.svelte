@@ -34,7 +34,7 @@
 		<!-- Mascot — big and central -->
 		<div class="my-4">
 			<img
-				src="/piknik/walk-groceries-a.gif"
+				src="/piknik/happy-bounce-a.gif"
 				alt="PikNik maskot"
 				class="w-48 h-48 object-contain mascot-float"
 			/>
