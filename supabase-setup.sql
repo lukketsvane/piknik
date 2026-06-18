@@ -1,5 +1,11 @@
+-- ============================================================
+-- PikNik – Supabase schema setup
+-- Safe to run multiple times (idempotent). Paste the whole file
+-- into the Supabase Dashboard → SQL Editor → Run.
+-- ============================================================
+
 -- ============================================
--- BLOCK 1: Create Tables
+-- BLOCK 1: Tables
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -40,7 +46,7 @@ CREATE TABLE IF NOT EXISTS recipes (
 );
 
 -- ============================================
--- BLOCK 2: RPC Function
+-- BLOCK 2: RPC – participants for a session code
 -- ============================================
 
 CREATE OR REPLACE FUNCTION get_session_data(p_session_code TEXT)
@@ -59,7 +65,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================
--- BLOCK 3: Row Level Security (permissive for dev)
+-- BLOCK 3: Row Level Security (permissive – anon app, no auth)
 -- ============================================
 
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
@@ -67,15 +73,33 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ingredients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow all on sessions" ON sessions;
+DROP POLICY IF EXISTS "Allow all on users" ON users;
+DROP POLICY IF EXISTS "Allow all on ingredients" ON ingredients;
+DROP POLICY IF EXISTS "Allow all on recipes" ON recipes;
+
 CREATE POLICY "Allow all on sessions" ON sessions FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on users" ON users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on ingredients" ON ingredients FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on recipes" ON recipes FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================
--- BLOCK 4: Enable Realtime
+-- BLOCK 4: Realtime publication (optional)
+-- The app syncs via broadcast + presence, not postgres_changes,
+-- so this is not strictly required — included for completeness.
+-- Guarded so re-running never errors on "already member".
 -- ============================================
 
-ALTER PUBLICATION supabase_realtime ADD TABLE sessions;
-ALTER PUBLICATION supabase_realtime ADD TABLE ingredients;
-ALTER PUBLICATION supabase_realtime ADD TABLE recipes;
+DO $$
+DECLARE
+  t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['sessions', 'ingredients', 'recipes'] LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_publication_tables
+      WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = t
+    ) THEN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', t);
+    END IF;
+  END LOOP;
+END $$;
